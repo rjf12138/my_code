@@ -4,7 +4,7 @@
 /*
 *   消息的基本结构(头部总长度不应该超过1600字节，消息采用网络字节序)
 *   magic_num   (1个字节头(用 $， 其它地方要用到这两个字符需要进行替代))
-*   消息序号     （2个字节[单个消息体序号为0，多个组合消息，对这两个字节分为两部分，消息类型+消息编号]）
+*   消息序号     （2个字节[单个消息体序号为0，多个组合消息，对这两个字节分为两部分，消息个数+消息编号]）
 *   消息体长度   (2个字节[取决于消息体的长度][头部长度+消息体长度+校验码])
 *   消息体      (未知)
 */
@@ -19,78 +19,49 @@
 #define MSG_HEAD_START          '$'
 #define MSG_HEAD_LENS           5
 
-class Message {
-public:
-    Message() {}
-    virtual ~Message() {}
-
-    int check_msg(void);
-    Buffer ret_msg_body(void); // 返回消息体
-    int add_msg_data(Buffer &msg_data);
-
-public:
-    uint16_t msg_num_; // 消息编号在这个类内生成
-    uint16_t msg_len_;
-    Buffer msg_buf_; // 保存一则字符串消息
-    Queue<Buffer> msg_body_queue_;  // 消息体队列
+struct MsgPacket {
+    // Msg 以存在时间超过最大寿命包将被丢弃
+    uint16_t msg_life;
+    // 消息目前状态
+    uint16_t msg_state;
+    // 消息编号: 标志每一个消息包 |消息个数|消息编号|
+    uint16_t msg_len;
+    // 消息包个数： 用于分包时标志该消息分为多少个包，从消息序号中获取
+    uint16_t msg_packet_num;
+    // 消息编号： 用于标志一个消息，从消息序号中获取
+    uint16_t msg_identity;
+    // 消息缓冲
+    shared_ptr<Buffer> msg_buff;
 };
 
-int
-Message::check_msg(void)    // 检查消息是否完成，或出错
-{
-    int start_pos = msg_buf_.get_start_pos();
-    int end_pos = msg_buf_.get_end_pos();
-    int8_t* buff = msg_buf_.get_buffer();
+class Message {
+public:
+    Message():{}
+    virtual ~Message() {}
 
-    if (buff[start_pos] != MSG_HEAD_START) {
-        return ERROR_PARSE_MESSAGE;
-    }
+    int push_recv_msg_packet(Buffer &buff);
+    int parse_recv_msg_packet(void);
+    // // 检查消息缓存，是否有完整的消息存在
+    // int check_msg(void);
+    // // 返回已解包的消息体
+    // Buffer ret_msg_body(void);
+    // MsgPacket get_new_msg_buff(uint16_t msg_num)
+    // // 添加消息到消息缓存中
+    // int add_msg_data(Buffer &msg_data);
 
-    if (msg_buf_.data_size() < MSG_HEAD_LENS) {
-        return MSG_INCOMPLETE;
-    }
+    // int push_msg_to_buff()；
 
-    int8_t double_bytes[2] = {0};
-    double_bytes[0] = buff[msg_buf_.get_next_pos(start_pos)];
-    double_bytes[1] = buff[msg_buf_.get_next_pos(start_pos+1)];
-    memcpy(&msg_num_, double_bytes, 2); 
-    msg_num_ = htons(msg_num_);
-
-    double_bytes[0] = buff[msg_buf_.get_next_pos(start_pos+2)];
-    double_bytes[1] = buff[msg_buf_.get_next_pos(start_pos+3)];
-    memcpy(&msg_len_, double_bytes, 2); 
-    msg_len_ = htons(msg_len_);
-
-    if (msg_len_ > MAX_MSG_LENGTH) {
-        return ERROR_PARSE_MESSAGE;
-    }
-
-    if (msg_buf_.data_size() < msg_len_) {
-        return MSG_INCOMPLETE;
-    }
-
-    Buffer tmp(MAX_MSG_LENGTH);
-    tmp.copy_to_buffer(msg_buf_, start_pos + 5, msg_len_);
-    msg_body_queue_.push(tmp);
-
-    return 0;
-}
-
-Buffer
-Message::ret_msg_body(void)
-{
-   Buffer ret;
-   msg_body_queue_.pop(ret);
-
-   return ret;
-}
-
-int 
-Message::add_msg_data(Buffer &msg_data)
-{
-    return msg_buf_.copy_to_buffer(msg_data, msg_data.get_start_pos(), msg_data.data_size());
-}
-
+public:
+    uint16_t msg_num_;
+    // 消息长度
+    uint16_t msg_len_;
+    // 缓存消息
+    Buffer msg_buf_;
+    // 保存收到的消息体
+    map<uint16_t, MsgPacket> msg_in_map_;
+    // 保存要发送的消息
+    Queue<Buffer> msg_out_queue_;
+};
 
 ////////////////////// Inner Msg Struct //////////////////////////
 
