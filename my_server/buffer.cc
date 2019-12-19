@@ -337,3 +337,36 @@ int Buffer::write_bytes_lock(const void *buf, int buf_size, bool match = false)
 
     return ret_size;
 }
+
+int Buffer::read_int16_ntoh(int16_t &val)
+{
+    this->read_int16(val);
+    val = ntohs(val);
+
+    return 0;
+}
+int Buffer::read_int32_ntoh(int32_t &val)
+{
+    this->read_int32(val);
+    val = ntohl(val);
+
+    return 0;
+}
+
+int Buffer::write_int16_ntoh(const int16_t &val)
+{
+    int16_t tmp = val;
+    tmp = htons(val);
+    this->write_int16(tmp);
+
+    return 0;
+}
+
+int Buffer::write_int32_ntoh(const int32_t &val)
+{
+    int32_t tmp = val;
+    tmp = htons(val);
+    this->write_int32(tmp);
+
+    return 0;
+}

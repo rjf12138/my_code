@@ -12,7 +12,7 @@ Queue<T>::~Queue()
 }
 
 template<class T>
-int Queue<T>::push(const T &data)
+int Queue<T>::push(T &data)
 {
     queue_mutex_.lock();
     if(current_size == max_queue_size){
