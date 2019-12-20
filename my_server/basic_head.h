@@ -14,6 +14,7 @@
 #include <memory>
 #include <queue>
 
+using namespace std;
 ////////////// linux system header file ////////////////
 
 #include <pthread.h>
@@ -23,8 +24,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-
-using namespace std;
 
 ////////////// defined by myself ////////////////////////
 
