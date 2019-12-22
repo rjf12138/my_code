@@ -33,30 +33,48 @@ NetPacket::parse_recv_packet(void)
             if (packet_buf_.data_size() < PACKET_HEAD_LENS) {
                 return NETPACKET_INCOMPLETE;
             }
-            shared_ptr<PacketInfo> packet_info_ptr = this->get_packet_info(-1);
-            if (this->get_packet_head(packet_info_ptr) != ERROR_PARSE_NETPACKET) {
+
+            shared_ptr<PacketInfo> ptr = make_shared<PacketInfo>();
+            if (this->get_packet_head(ptr) != ERROR_PARSE_NETPACKET) {
+                shared_ptr<PacketInfo> packet_info_ptr = this->get_packet_info(ptr->packet_identity);
+                *packet_info_ptr = *ptr;
+
                 packet_handle_state_ = NETPACKET_HANDLE_MSG;
                 curr_packet_identity_ = packet_info_ptr->packet_identity;
-                packet_info_ptr->msg_buff.reserve(packet_info_ptr->len / );
+
+                if (packet_info_ptr->msg_buff.size() <= 0) { 
+                    int size = packet_info_ptr->entire_msg_len / MAX_PACKET_BODY_LENGTH;
+                    int packet_frame_size = packet_info_ptr->entire_msg_len % MAX_PACKET_BODY_LENGTH == 0 ? size : size + 1;
+                    packet_info_ptr->msg_buff.reserve(packet_frame_size);
+                }
             }
         } break;
         case NETPACKET_HANDLE_MSG:
         {
+            // 加个消息的定时器
             // 每个分包需要有自己的编号， 当分包来时会可能会是乱序的，因此需要根据分包编号来
             // 重新构建消息， 需要修改代码
             shared_ptr<PacketInfo> packet_info_ptr = this->get_packet_info(curr_packet_identity_);
-            uint16_t curr_packet_frame = packet_info_ptr->packet_num;
+            uint16_t curr_packet_frame = packet_info_ptr->packet_frame_identity;
             uint16_t start_pos = packet_buf_.get_start_pos();
-            uint16_t remain_size = packet_info_ptr->packet_len - packet_info_ptr->curr_len;
+
+            uint16_t remain_size = packet_info_ptr->packet_len - packet_info_ptr->curr_packet_len;
             uint16_t read_size = packet_buf_.data_size() <= remain_size ?
                                         packet_buf_.data_size() : remain_size;
             packet_info_ptr->msg_buff[curr_packet_frame]->copy_to_buffer(packet_buf_, start_pos, read_size);
-            packet_info_ptr->curr_len += read_size;
+            packet_info_ptr->curr_packet_len += read_size;
 
-            if (packet_info_ptr->curr_len >= packet_info_ptr->packet_len) {
-                for (auto iter = )
-                packet_in_map_.erase(curr_packet_identity_);
+            if (packet_info_ptr->curr_packet_len >= packet_info_ptr->packet_len) {
                 packet_handle_state_ = NETPACKET_HANDLE_IDLE;
+                packet_info_ptr->curr_packet_len = 0; // 重新设置当前包长为0
+
+                // 当所有消息都收到是就将消息组合之后返回
+                packet_info_ptr->curr_msg_len += packet_info_ptr->packet_len;
+                if (packet_info_ptr->curr_msg_len >= packet_info_ptr->entire_msg_len) {
+                    shared_ptr<Buffer> ret = this->merge_all_msg_frame(*packet_info_ptr);
+                    msg_in_queue_.push(ret);
+                    packet_in_map_.erase(packet_info_ptr->packet_identity);
+                }
             }
         } break;
         default:
@@ -66,6 +84,32 @@ NetPacket::parse_recv_packet(void)
 
     return NETPACKET_INCOMPLETE;
 }
+
+int NetPacket::push_send_msg(Buffer &buff)
+{
+    PacketInfo packet_info;
+    packet_info.entire_msg_len = buff.data_size();
+    packet_info.packet_identity = this->get_next_packet_identity();
+
+    int size = buff.data_size() / MAX_PACKET_BODY_LENGTH;
+    int packet_frame_size = buff.data_size() % MAX_PACKET_BODY_LENGTH == 0 ? size : size + 1;
+
+    shared_ptr<Buffer> msg_buf = make_shared<Buffer>();
+    int curr_write_len = 0;
+    for (int i = 0; i < packet_frame_size; ++i) {
+        int write_size = (i == packet_frame_size - 1) ? 
+                            buff.data_size() - curr_write_len : MAX_PACKET_BODY_LENGTH;
+
+    packet_info.packet_frame_identity = i;
+    packet_info.packet_len = write_size;
+    curr_write_len += write_size;
+    this->generate_packet_head(msg_buf, packet_info);
+    msg_buf->copy_to_buffer(buff, buff.get_start_pos(), buff.data_size());
+    msg_out_queue_.push(msg_buf);
+
+    return 0;
+}
+
 
 int 
 NetPacket::get_packet_head(shared_ptr<PacketInfo> &packet_info_ptr)
@@ -77,8 +121,9 @@ NetPacket::get_packet_head(shared_ptr<PacketInfo> &packet_info_ptr)
     }
 
     packet_buf_.read_int16_ntoh((int16_t&)packet_info_ptr->packet_identity);
-    packet_buf_.read_int16_ntoh((int16_t&)packet_info_ptr->packet_num);
+    packet_buf_.read_int16_ntoh((int16_t&)packet_info_ptr->entire_msg_len);
     packet_buf_.read_int16_ntoh((int16_t&)packet_info_ptr->packet_len);
+    packet_buf_.read_int16_ntoh((int16_t&)packet_info_ptr->packet_frame_identity);
 
     return 0;
 }
@@ -101,12 +146,31 @@ NetPacket::get_msg_from_queue(shared_ptr<Buffer> &msg_body)
 }
 
 uint16_t 
-NetPacket::get_next_packet_num(void)
+NetPacket::get_next_packet_identity(void)
 {
     return next_packet_identity_++ % MAX_PACKET_NUM;
 }
 
-int NetPacket::push_send_msg(Buffer &buff)
+int 
+NetPacket::generate_packet_head(shared_ptr<Buffer> &msg, PacketInfo &packet_info)
 {
+    msg->write_int8('$');
+    msg->write_int16(packet_info.packet_identity);
+    msg->write_int16(packet_info.entire_msg_len);
+    msg->write_int16(packet_info.packet_len);
+    msg->write_int16(packet_info.packet_frame_identity);
 
+    return 0;
+}
+
+shared_ptr<Buffer> 
+NetPacket::merge_all_msg_frame(PacketInfo &packet_info)
+{
+    vector<shared_ptr<Buffer>> &data = packet_info.msg_buff;
+    shared_ptr<Buffer> in_msg = make_shared<Buffer>();
+    for (int i = 0; i < data.size(); ++i) {
+        in_msg->copy_to_buffer(*data[i], data[i]->get_start_pos(), data[i]->data_size());
+    }
+
+    return in_msg;
 }
