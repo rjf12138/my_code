@@ -6,7 +6,7 @@
 *   传，需要上层自行处理消息
 */
 #include "basic_head.h"
-#include "message.h"
+#include "net_packet.h"
 #include "thread.h"
 
 class MessageHandler : public Thread, public MSGObject{
@@ -24,7 +24,7 @@ private:
 private:
     bool exit_ = false;
     OBJ_HANDLE task_handler_;
-    map<int, Buffer*> io_buffer_;
+    map<int, shared_ptr<NetPacket>> io_buffer_;
 };
 
 

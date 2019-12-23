@@ -1,4 +1,5 @@
 #include "net_packet.h"
+#include "error.h"
 
 
 NetPacket::NetPacket()
@@ -85,7 +86,8 @@ NetPacket::parse_recv_packet(void)
     return NETPACKET_INCOMPLETE;
 }
 
-int NetPacket::push_send_msg(Buffer &buff)
+int 
+NetPacket::push_send_msg(Buffer &buff)
 {
     PacketInfo packet_info;
     packet_info.entire_msg_len = buff.data_size();
@@ -100,18 +102,17 @@ int NetPacket::push_send_msg(Buffer &buff)
         int write_size = (i == packet_frame_size - 1) ? 
                             buff.data_size() - curr_write_len : MAX_PACKET_BODY_LENGTH;
 
-    packet_info.packet_frame_identity = i;
-    packet_info.packet_len = write_size;
-    curr_write_len += write_size;
-    this->generate_packet_head(msg_buf, packet_info);
-    msg_buf->copy_to_buffer(buff, buff.get_start_pos(), buff.data_size());
-    msg_out_queue_.push(msg_buf);
-
+        packet_info.packet_frame_identity = i;
+        packet_info.packet_len = write_size;
+        curr_write_len += write_size;
+        this->generate_packet_head(msg_buf, packet_info);
+        msg_buf->copy_to_buffer(buff, buff.get_start_pos(), buff.data_size());
+        msg_out_queue_.push(msg_buf);
+    }
     return 0;
 }
 
-
-int 
+int
 NetPacket::get_packet_head(shared_ptr<PacketInfo> &packet_info_ptr)
 {
     int8_t magic_num = 0;

@@ -2,12 +2,12 @@
 #define __REACTOR_H__
 
 #include "basic_head.h"
-#include "event_handler.h"
 #include "thread.h"
 
+#define MAX_MSG_BUF 8192
 #define MAX_EVENT_NUM 512
 
-class Reactor : public Thread ,public MSGObject{
+class Reactor : public Thread ,public MSGObject {
 public:
     Reactor(OBJ_HANDLE msg_handler);
     virtual ~Reactor(void);

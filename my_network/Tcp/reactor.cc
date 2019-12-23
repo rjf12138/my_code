@@ -86,8 +86,8 @@ int Reactor::handler_event(int fd)
 
         this->add_fd(client_fd);
     } else {
-        char buf[MAX_MSG_LENGTH] = {0};
-        int len = recv(fd, buf, MAX_MSG_LENGTH, 0);
+        char buf[MAX_MSG_BUF] = {0};
+        int len = recv(fd, buf, MAX_MSG_BUF, 0);
         if (len == -1) {
             return -1;
         }
