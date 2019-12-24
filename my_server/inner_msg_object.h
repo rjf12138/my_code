@@ -8,6 +8,8 @@
 
 #include "inner_msg_object.h"
 
+/// 解决参数类型不对的问题
+
 struct InnerMsg {
     int msg_id_;
     OBJ_HANDLE handler_;
@@ -19,6 +21,8 @@ struct InnerMsg {
     InnerMsg(int msg_id = 0, OBJ_HANDLE handler = 0, int param1 = 0, int param2 = 0, string str = "", void* object = nullptr):
         msg_id_(msg_id), handler_(handler), param1_(param1), param2_(param2),str_(str), object_(object)
     {}
+private:
+    T value_;
 };
 
 

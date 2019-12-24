@@ -9,7 +9,7 @@
 
 class Reactor : public Thread ,public MSGObject {
 public:
-    Reactor(OBJ_HANDLE msg_handler);
+    Reactor(OBJ_HANDLE netpacket_handler);
     virtual ~Reactor(void);
 
     int init(void);
@@ -27,9 +27,9 @@ private:
 private:
     int epoll_fd_ = -1;
     int listen_fd_ = -1;
-    OBJ_HANDLE msg_handler_;
     bool exit_ = false;
     struct epoll_event event_[MAX_EVENT_NUM];
+    OBJ_HANDLE netpacket_handler_;
 };
 
 #endif

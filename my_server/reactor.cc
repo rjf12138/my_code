@@ -1,7 +1,7 @@
 #include "reactor.h"
 
-Reactor::Reactor(OBJ_HANDLE msg_handler): 
-    msg_handler_(msg_handler) 
+Reactor::Reactor(OBJ_HANDLE netpacket_handler): 
+    netpacket_handler_(netpacket_handler) 
 { }
 
 Reactor::~Reactor(void) 
@@ -91,10 +91,12 @@ int Reactor::handler_event(int fd)
         if (len == -1) {
             return -1;
         }
+
         Buffer *buffer = new Buffer(len+1);
         buffer->write_bytes(buf, len);
         InnerMsg msg(MSG_DATA_BUFFER, object_id_, len, fd, "", buffer);
         this->trans_msg(msg_handler_, msg);
+        // 直接发到 connector 里
     }
 
     return 0;

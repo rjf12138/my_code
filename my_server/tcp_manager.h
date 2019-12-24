@@ -17,24 +17,32 @@ struct TcpState {
 
 };
 
-class TcpManager {
+class TcpManager : public MSGObject, public Thread{
 public:
     TcpManager(string local_ip, int16_t local_port);
     virtual ~TcpManager(void);
 
+    virtual int on_msg(InnerMsg msg) override;
+    virtual int run_handler() override;
+    virtual int exit_handler() override;
+
     // 向远端发起 tcp 连接,成功时返回sockfd
     int connect_to(string ip, int16_t port);
+    // 关闭一条tcp连接
+    int showdown_connect(int fd);
     // 创建服务端监听的socket_fd
     int server_listening(void);
     // 客户端主动连接成功时，返回sockfd
     int ret_client_socket_fd(void);
+    // 添加要发送的消息
+    int push_data(pair<int, shared_ptr<Buffer>> &ret);
+    // 获取已经接收到的消息
+    int get_data(pair<int, shared_ptr<Buffer>> &ret);
 
-    int push_data(void);
-    int get_data(void);
 private:
     string local_ip_;
     int16_t local_port_;
-    Reactor reactor_;
+    NetPacket net_packet_;
 };
 
 #endif

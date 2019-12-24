@@ -2,13 +2,12 @@
 #include "error.h"
 
 
-NetPacket::NetPacket()
-: packet_handle_state_(NETPACKET_HANDLE_IDLE),
-  next_packet_identity_(0)
+NetPacket::NetPacket(void)
+: next_packet_identity_(0)
 {
 
 }
-NetPacket::~NetPacket() 
+NetPacket::~NetPacket(void) 
 {
 
 }
@@ -52,9 +51,6 @@ NetPacket::parse_recv_packet(void)
         } break;
         case NETPACKET_HANDLE_MSG:
         {
-            // 加个消息的定时器
-            // 每个分包需要有自己的编号， 当分包来时会可能会是乱序的，因此需要根据分包编号来
-            // 重新构建消息， 需要修改代码
             shared_ptr<PacketInfo> packet_info_ptr = this->get_packet_info(curr_packet_identity_);
             uint16_t curr_packet_frame = packet_info_ptr->packet_frame_identity;
             uint16_t start_pos = packet_buf_.get_start_pos();

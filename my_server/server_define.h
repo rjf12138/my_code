@@ -16,6 +16,10 @@ enum NETPACKET {
     NETPACKET_HANDLE_MSG = 1053, // 正在处理消息
 };
 
+enum TCP_MANAGER {
+    TCP_MANAGER_RECV_DATA,
+    TCP_MANAGER_SOCK_FD,
+};
 
 ////////////////////// inner_msg_id /////////////////////////
 

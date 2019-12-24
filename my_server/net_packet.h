@@ -59,8 +59,10 @@ public:
 
 class NetPacket {
 public:
-    NetPacket();
-    virtual ~NetPacket();
+    NetPacket(void);
+    virtual ~NetPacket(void);
+
+    virtual int on_msg(InnerMsg msg);
 
     int push_recv_packet(Buffer &buff);
     int parse_recv_packet(void);
@@ -90,5 +92,4 @@ public:
     Queue<shared_ptr<Buffer>> msg_out_queue_;
 };
 
-///////////////////////////// 自定义消息 ////////////////////////////
 #endif
