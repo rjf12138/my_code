@@ -15,7 +15,8 @@ int TcpManager::on_msg(InnerMsg msg)
     {
     case TCP_MANAGER_RECV_DATA:
     {
-
+        shared_ptr<Buffer> recv_data = static_cast<shared_ptr<Buffer>>(msg.object_);
+        net_packet_.push_recv_packet(msg.object_);
     } break;
     case TCP_MANAGER_SOCK_FD:
     {
