@@ -71,6 +71,8 @@ NetPacket::parse_recv_packet(void)
                     shared_ptr<Buffer> ret = this->merge_all_msg_frame(*packet_info_ptr);
                     msg_in_queue_.push(ret);
                     packet_in_map_.erase(packet_info_ptr->packet_identity);
+
+                    return NETPACKET_COMPLETE;
                 }
             }
         } break;

@@ -14,7 +14,6 @@ struct TcpState {
     int socket_fd_;
     int16_t port_;
     string ip_;
-
 };
 
 class TcpManager : public MSGObject, public Thread{
@@ -40,9 +39,11 @@ public:
     int get_data(pair<int, shared_ptr<Buffer>> &ret);
 
 private:
+    bool exit_ = false;
     string local_ip_;
     int16_t local_port_;
     NetPacket net_packet_;
+    map<int, TcpState> tcp_states_;
 };
 
 #endif

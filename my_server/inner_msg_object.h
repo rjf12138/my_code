@@ -15,19 +15,18 @@ struct InnerMsg {
     OBJ_HANDLE handler_;
     int param1_;
     int param2_;
-    string str_;
-    shared_ptr<void> object_;
+    Buffer buffer_;
 
-    InnerMsg(int msg_id = 0, OBJ_HANDLE handler = 0, int param1 = 0, int param2 = 0, string str = "", void* object = nullptr):
-        msg_id_(msg_id), handler_(handler), param1_(param1), param2_(param2),str_(str), object_(object)
+    InnerMsg(int msg_id = 0, OBJ_HANDLE handler = 0, int param1 = 0, int param2 = 0):
+        msg_id_(msg_id), handler_(handler), param1_(param1), param2_(param2)
     {}
-private:
-    T value_;
+
+    void set_buffer(Buffer &buffer) {buffer_ = buffer;}
 };
 
 
 
-typedef uint8_t OBJ_HANDLE;
+typedef uint16_t OBJ_HANDLE;
 
 class MSGObject {
 public:

@@ -85,6 +85,8 @@ int Reactor::handler_event(int fd)
         }
 
         this->add_fd(client_fd);
+        InnerMsg msg(TCP_MANAGER_SOCK_FD, object_id_, fd);
+        this->trans_msg(netpacket_handler_, msg);
     } else {
         char buf[MAX_MSG_BUF] = {0};
         int len = recv(fd, buf, MAX_MSG_BUF, 0);
@@ -92,10 +94,11 @@ int Reactor::handler_event(int fd)
             return -1;
         }
 
-        Buffer *buffer = new Buffer(len+1);
-        buffer->write_bytes(buf, len);
-        InnerMsg msg(MSG_DATA_BUFFER, object_id_, len, fd, "", buffer);
-        this->trans_msg(msg_handler_, msg);
+        Buffer buffer;
+        buffer.write_bytes(buf, len);
+        InnerMsg msg(TCP_MANAGER_RECV_DATA, object_id_, len, fd);
+        msg.set_buffer(buffer);
+        this->trans_msg(netpacket_handler_, msg);
         // 直接发到 connector 里
     }
 
