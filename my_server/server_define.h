@@ -17,14 +17,18 @@ enum NETPACKET {
 };
 
 enum TCP_MANAGER {
-    TCP_MANAGER_RECV_DATA,
-    TCP_MANAGER_SOCK_FD,
+    TCP_MANAGER_REACTOR_REGISTER = 1100,
+    TCP_MANAGER_REACTOR_LOGOUT = 1101,
+    TCP_MANAGER_RECV_DATA = 1102,
+    TCP_MANAGER_SOCK_FD = 1103,
+    TCP_MANAGER_INNER_MSG = 1104,
 };
 
 ////////////////////// inner_msg_id /////////////////////////
 
 enum REACTOR_MSG_ID {
-    MSG_ADD_FD = 11000,
+    REACTOR_ADD_FD = 1150,
+    REACTOR_DEL_FD = 1151,
 };
 
 enum MSG_HANDER_MSG_ID {

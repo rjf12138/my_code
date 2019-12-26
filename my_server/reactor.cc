@@ -1,7 +1,7 @@
 #include "reactor.h"
 
-Reactor::Reactor(OBJ_HANDLE netpacket_handler): 
-    netpacket_handler_(netpacket_handler) 
+Reactor::Reactor(OBJ_HANDLE manager_hander): 
+    manager_hander_(manager_hander) 
 { }
 
 Reactor::~Reactor(void) 
@@ -38,6 +38,26 @@ int Reactor::exit_handler(void)
     exit_ = true;
 }
 
+int Reactor::on_msg(InnerMsg msg)
+{
+    switch (msg.msg_id_) {
+        case REACTOR_ADD_FD:
+        {
+            if (msg.param2_ == 1) {
+                listen_fd_ = msg.param1_;
+                this->add_fd(listen_fd_);
+            }
+        } break;
+        case REACTOR_DEL_FD:
+        {
+
+        } break;
+        default:
+        {
+
+        } break;
+    }
+}
 
 int Reactor::add_fd(int fd, bool is_listen_fd = false)
 {
@@ -86,7 +106,7 @@ int Reactor::handler_event(int fd)
 
         this->add_fd(client_fd);
         InnerMsg msg(TCP_MANAGER_SOCK_FD, object_id_, fd);
-        this->trans_msg(netpacket_handler_, msg);
+        this->trans_msg(manager_hander_, msg);
     } else {
         char buf[MAX_MSG_BUF] = {0};
         int len = recv(fd, buf, MAX_MSG_BUF, 0);
@@ -98,7 +118,7 @@ int Reactor::handler_event(int fd)
         buffer.write_bytes(buf, len);
         InnerMsg msg(TCP_MANAGER_RECV_DATA, object_id_, len, fd);
         msg.set_buffer(buffer);
-        this->trans_msg(netpacket_handler_, msg);
+        this->trans_msg(manager_hander_, msg);
         // 直接发到 connector 里
     }
 

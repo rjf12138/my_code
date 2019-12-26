@@ -16,6 +16,9 @@ struct TcpState {
     string ip_;
 };
 
+typedef map<int, TcpState> TCP_CONNECTOR_STATE_MAP;
+typedef map<OBJ_HANDLE, TCP_CONNECTOR_STATE_MAP> REACTOR_MAP;
+
 class TcpManager : public MSGObject, public Thread{
 public:
     TcpManager(string local_ip, int16_t local_port);
@@ -25,10 +28,12 @@ public:
     virtual int run_handler() override;
     virtual int exit_handler() override;
 
+    int start(void);
+    int stop(void);
     // 向远端发起 tcp 连接,成功时返回sockfd
     int connect_to(string ip, int16_t port);
     // 关闭一条tcp连接
-    int showdown_connect(int fd);
+    int shutdown_connect(int fd);
     // 创建服务端监听的socket_fd
     int server_listening(void);
     // 客户端主动连接成功时，返回sockfd
@@ -39,11 +44,14 @@ public:
     int get_data(pair<int, shared_ptr<Buffer>> &ret);
 
 private:
+    OBJ_HANDLE find_reactor(int sockfd);
+
+private:
     bool exit_ = false;
     string local_ip_;
     int16_t local_port_;
     NetPacket net_packet_;
-    map<int, TcpState> tcp_states_;
+    REACTOR_MAP reactors_; // 目前只支持加入一个 reactor
 };
 
 #endif
