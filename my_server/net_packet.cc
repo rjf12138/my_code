@@ -85,29 +85,40 @@ NetPacket::parse_recv_packet(void)
 }
 
 int 
-NetPacket::push_send_msg(Buffer &buff)
+NetPacket::push_send_msg(shared_ptr<Buffer> &buff)
 {
     PacketInfo packet_info;
-    packet_info.entire_msg_len = buff.data_size();
+    packet_info.entire_msg_len = buff->data_size();
     packet_info.packet_identity = this->get_next_packet_identity();
 
-    int size = buff.data_size() / MAX_PACKET_BODY_LENGTH;
-    int packet_frame_size = buff.data_size() % MAX_PACKET_BODY_LENGTH == 0 ? size : size + 1;
+    int size = buff->data_size() / MAX_PACKET_BODY_LENGTH;
+    int packet_frame_size = buff->data_size() % MAX_PACKET_BODY_LENGTH == 0 ? size : size + 1;
 
     shared_ptr<Buffer> msg_buf = make_shared<Buffer>();
     int curr_write_len = 0;
     for (int i = 0; i < packet_frame_size; ++i) {
         int write_size = (i == packet_frame_size - 1) ? 
-                            buff.data_size() - curr_write_len : MAX_PACKET_BODY_LENGTH;
+                            buff->data_size() - curr_write_len : MAX_PACKET_BODY_LENGTH;
 
         packet_info.packet_frame_identity = i;
         packet_info.packet_len = write_size;
         curr_write_len += write_size;
         this->generate_packet_head(msg_buf, packet_info);
-        msg_buf->copy_to_buffer(buff, buff.get_start_pos(), buff.data_size());
+        msg_buf->copy_to_buffer(*buff, buff->get_start_pos(), buff->data_size());
         msg_out_queue_.push(msg_buf);
     }
     return 0;
+}
+
+int 
+NetPacket::get_msg_frame(shared_ptr<Buffer> &frame)
+{
+    int ret = msg_out_queue_.pop(frame);
+    if (ret != -1) {
+        return 0;
+    }
+
+    return -1;
 }
 
 int
@@ -153,7 +164,7 @@ NetPacket::get_next_packet_identity(void)
 int 
 NetPacket::generate_packet_head(shared_ptr<Buffer> &msg, PacketInfo &packet_info)
 {
-    msg->write_int8('$');
+    msg->write_int8(PACKET_HEAD_START);
     msg->write_int16(packet_info.packet_identity);
     msg->write_int16(packet_info.entire_msg_len);
     msg->write_int16(packet_info.packet_len);

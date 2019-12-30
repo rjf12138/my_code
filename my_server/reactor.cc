@@ -43,7 +43,7 @@ int Reactor::on_msg(InnerMsg msg)
     switch (msg.msg_id_) {
         case REACTOR_ADD_FD:
         {
-            if (msg.param2_ == 1) {
+            if (msg.param2_ == TCP_MANAGER_LISTEND_FD) {
                 listen_fd_ = msg.param1_;
                 this->add_fd(listen_fd_);
             }
@@ -114,10 +114,10 @@ int Reactor::handler_event(int fd)
             return -1;
         }
 
-        Buffer buffer;
-        buffer.write_bytes(buf, len);
+        shared_ptr<Buffer> buff_ptr = make_shared<Buffer>();
+        buff_ptr->write_bytes(buf, len);
         InnerMsg msg(TCP_MANAGER_RECV_DATA, object_id_, len, fd);
-        msg.set_buffer(buffer);
+        msg.set_buffer(buff_ptr);
         this->trans_msg(manager_hander_, msg);
         // 直接发到 connector 里
     }

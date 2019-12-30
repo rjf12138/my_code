@@ -15,13 +15,13 @@ struct InnerMsg {
     OBJ_HANDLE handler_;
     int param1_;
     int param2_;
-    Buffer buffer_;
+    shared_ptr<Buffer> buffer_;
 
     InnerMsg(int msg_id = 0, OBJ_HANDLE handler = 0, int param1 = 0, int param2 = 0):
         msg_id_(msg_id), handler_(handler), param1_(param1), param2_(param2)
     {}
 
-    void set_buffer(Buffer &buffer) {buffer_ = buffer;}
+    void set_buffer(shared_ptr<Buffer> buffer) {buffer_ = buffer;}
 };
 
 

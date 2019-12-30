@@ -67,8 +67,9 @@ public:
     int push_recv_packet(Buffer &buff);
     int parse_recv_packet(void);
     int get_msg_from_queue(shared_ptr<Buffer> &msg_body);
-
-    int push_send_msg(Buffer &buff);
+    
+    int push_send_msg(shared_ptr<Buffer> &buff);
+    int get_msg_frame(shared_ptr<Buffer> &frame);
     
     uint16_t get_next_packet_identity(void);
     int generate_packet_head(shared_ptr<Buffer> &msg, PacketInfo &packet_info);
