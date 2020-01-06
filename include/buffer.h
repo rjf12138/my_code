@@ -49,6 +49,14 @@ public:
     // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
     int copy_to_buffer(const Buffer buf, uint32_t start, uint32_t size);
 
+    // 网络字节序转换
+    // 将缓存中的数据读取出来并转成主机字节序返回
+    int read_int16_ntoh(int16_t &val);
+    int read_int32_ntoh(int32_t &val);
+    // 将数据转成字节序写入缓存
+    int write_int16_ntoh(const int16_t &val);
+    int write_int32_ntoh(const int32_t &val);
+
     int8_t* get_buffer(void);
     int get_start_pos(void) const ;
     int get_next_pos(int curr_pos) const;

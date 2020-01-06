@@ -1,2 +1,0 @@
-/usr/bin/ar qc lib/libutil.a  CMakeFiles/util.dir/buffer.cc.o CMakeFiles/util.dir/inner_msg_object.cc.o CMakeFiles/util.dir/mutex.cc.o CMakeFiles/util.dir/queue.cc.o CMakeFiles/util.dir/thread.cc.o
-/usr/bin/ranlib lib/libutil.a
