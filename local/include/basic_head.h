@@ -35,7 +35,5 @@ using namespace std;
 #include "queue.h"
 #include "thread.h"
 #include "mutex.h"
-#include "server_define.h"
-#include "inner_msg_object.h"
 
 #endif

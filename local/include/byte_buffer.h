@@ -13,10 +13,10 @@
 
 #define MAX_STRING_SIZE 512
 
-class Buffer {
+class ByteBuffer {
 public:
-    Buffer(int max_buffer_size = 1024);
-    virtual ~Buffer();
+    ByteBuffer(int max_buffer_size = 1024);
+    virtual ~ByteBuffer();
 
     int read_int8(int8_t &val);
     int read_int16(int16_t &val);
@@ -47,7 +47,7 @@ public:
     int write_bytes_lock(const void *buf, int buf_size, bool match = false);
 
     // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
-    int copy_to_buffer(const Buffer buf, uint32_t start, uint32_t size);
+    int copy_to_buffer(const ByteBuffer buf, uint32_t start, uint32_t size);
 
     // 网络字节序转换
     // 将缓存中的数据读取出来并转成主机字节序返回
@@ -57,16 +57,29 @@ public:
     int write_int16_ntoh(const int16_t &val);
     int write_int32_ntoh(const int32_t &val);
 
+    // 获取buff缓冲指针， 用于不修改内部读写位置而进行的预览
     int8_t* get_buffer(void);
-    int get_start_pos(void) const ;
-    int get_next_pos(int curr_pos) const;
-    int get_prev_pos(int curr_pos) const;
-    int get_end_pos(void) const;
-    bool empty(void) const;
-    bool full(void) const;
-    int data_size(void) const;
-    int idle_size() const;
+    // 获取起始位置
+    int get_start_pos(void);
+    // 根据当前位置， 获取下一个字节位置
+    int get_next_pos(int curr_pos);
+    // 根据当前位置， 回到上一个读取位置
+    int get_prev_pos(int curr_pos);
+    // 获取结束位置
+    int get_end_pos(void);
+
+    bool empty(void);
+    bool full(void);
+    int data_size(void);
+    int idle_size();
     int clear(void);
+
+    // 获取错误码，只在错误发生后调用才有效
+    int get_error(void);
+    // 获取错消息，只在错误发生后调用才有效
+    string get_err_msg(void);
+    // 根据错误码返回错误消息
+    string get_err_msg(int errno);
 
 private:
     void next_read_pos(int offset = 1);
@@ -84,6 +97,8 @@ private:
 
     int data_size_;
     int max_buffer_size_;
+
+    int errno_;
 };
 
 #endif
