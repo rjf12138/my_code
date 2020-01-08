@@ -76,11 +76,15 @@ public:
 
     // 获取错误码，只在错误发生后调用才有效
     int get_error(void);
-    // 获取错消息，只在错误发生后调用才有效
-    string get_err_msg(void);
     // 根据错误码返回错误消息
     string get_err_msg(int errno);
+    // 获取错消息，只在错误发生后调用才有效
+    string get_err_msg(void);
 
+    // 重载操作符
+    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    
 private:
     void next_read_pos(int offset = 1);
     void next_write_pos(int offset = 1);
@@ -99,6 +103,14 @@ private:
     int max_buffer_size_;
 
     int errno_;
+};
+
+
+
+// 迭代器
+struct ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t> 
+{
+
 };
 
 #endif

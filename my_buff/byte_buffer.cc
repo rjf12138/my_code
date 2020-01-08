@@ -255,7 +255,8 @@ int ByteBuffer::write_string(string str)
 int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match = false)
 {
     if (buf == NULL) {
-        return 0;
+        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        return -1;
     }
 
     return this->copy_data_to_buffer(buf, buf_size);
@@ -366,14 +367,20 @@ int ByteBuffer::write_bytes_lock(const void *buf, int buf_size, bool match = fal
 
 int ByteBuffer::read_int16_ntoh(int16_t &val)
 {
-    this->read_int16(val);
+    int ret = this->read_int16(val);
+    if (ret == -1) {
+        return -1;
+    }
     val = ntohs(val);
 
     return 0;
 }
 int ByteBuffer::read_int32_ntoh(int32_t &val)
 {
-    this->read_int32(val);
+    int ret = this->read_int32(val);
+    if (ret == -1) {
+        return -1;
+    }
     val = ntohl(val);
 
     return 0;
@@ -383,16 +390,86 @@ int ByteBuffer::write_int16_ntoh(const int16_t &val)
 {
     int16_t tmp = val;
     tmp = htons(val);
-    this->write_int16(tmp);
+    int ret = this->write_int16(tmp);
 
-    return 0;
+    return ret;
 }
 
 int ByteBuffer::write_int32_ntoh(const int32_t &val)
 {
     int32_t tmp = val;
     tmp = htons(val);
-    this->write_int32(tmp);
+    int  ret = this->write_int32(tmp);
 
-    return 0;
+    return ret;
+}
+
+int 
+ByteBuffer::get_error(void)
+{
+    return errno_;
+}
+
+string 
+ByteBuffer::get_err_msg(void)
+{
+    return this->get_err_msg(errno_);
+}
+
+string 
+ByteBuffer::get_err_msg(int errno)
+{
+    string error_msg;
+    switch(errno_) {
+        case BYTE_BUFF_SUCCESS: 
+            error_msg = STR_BYTE_BUFF_SUCCESS;
+            break;
+        case BYTE_BUFF_EMPTY:
+            error_msg = STR_BYTE_BUFF_EMPTY;
+            break;
+        case BYTE_BUFF_FULL:
+            error_msg = STR_BYTE_BUFF_FULL;
+            break;
+        case BYTE_BUFF_COPY_DATA_FROM_BUFFER_FAILED:
+            error_msg = STR_BYTE_BUFF_COPY_DATA_FROM_BUFFER_FAILED;
+            break;
+        case BYTE_BUFF_COPY_DATA_TO_BUFFER_FAILED:
+            error_msg = STR_BYTE_BUFF_COPY_DATA_TO_BUFFER_FAILED;
+            break;
+        case BYTE_BUFF_STR_READ_FAILED:
+            error_msg = STR_BYTE_BUFF_STR_READ_FAILED;
+            break;
+        case BYTE_BUFF_OUTPUT_BUFFER_IS_NULL:
+            error_msg =STR_BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+            break;
+        case BYTE_BUFF_OUT_OF_RANGE:
+            error_msg =STR_BYTE_BUFF_OUT_OF_RANGE;
+            break;
+        case BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH:
+            error_msg =STR_BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
+            break;
+        default:
+            error_msg = STR_UNKNOWN_ERROR;
+    }
+
+    return error_msg;
+}
+
+///////////重载操作符/////////////////////////
+
+ByteBuffer 
+operator+(const ByteBuffer &lhs, const ByteBuffer &rhs)
+{
+    ByteBuffer out;
+
+    out.copy_to_buffer(lhs, 0, lhs.data_size_);
+    out.copy_to_buffer(rhs, 0, rhs.data_size_);
+
+    return out;
+}
+
+bool 
+operator==(const ByteBuffer &lhs, const ByteBuffer &rhs)
+{
+    
 }

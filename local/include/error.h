@@ -1,6 +1,8 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 
+#define STR_UNKNOWN_ERROR      "unknown errror"
+
 enum ERROR_BYTE_BUFF 
 {
     BYTE_BUFF_SUCCESS = 0,
@@ -16,6 +18,7 @@ enum ERROR_BYTE_BUFF
 
 #define STR_BYTE_BUFF_SUCCESS                       "byte_buff success"
 #define STR_BYTE_BUFF_EMPTY                         "byte_buff is empty"
+#define STR_BYTE_BUFF_FULL                          "byte_buff is full"
 #define STR_BYTE_BUFF_COPY_DATA_FROM_BUFFER_FAILED  "byte_buff copy data from buff failed"
 #define STR_BYTE_BUFF_COPY_DATA_TO_BUFFER_FAILED    "byte_buff copy data to buff failed"
 #define STR_BYTE_BUFF_STR_READ_FAILED               "byte_buff str read failed"
