@@ -13,7 +13,9 @@
 
 #define MAX_STRING_SIZE 512
 
+class ByteBuffer_Iterator;
 class ByteBuffer {
+    friend class ByteBuffer_Iterator;
 public:
     ByteBuffer(int max_buffer_size = 1024);
     virtual ~ByteBuffer();
@@ -57,6 +59,35 @@ public:
     int write_int16_ntoh(const int16_t &val);
     int write_int32_ntoh(const int32_t &val);
 
+    bool empty(void);
+    bool full(void);
+    int data_size(void);
+    int idle_size();
+    int clear(void);
+
+
+    // 获取错误码，只在错误发生后调用才有效
+    int get_error(void);
+    // 根据错误码返回错误消息
+    string get_err_msg(int err);
+    // 获取错消息，只在错误发生后调用才有效
+    string get_err_msg(void);
+
+    // 重载操作符
+    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    
+private:
+    // 下一个读的位置
+    void next_read_pos(int offset = 1);
+    // 下一个写的位置
+    void next_write_pos(int offset = 1);
+
+    // 将data中的数据拷贝size个字节到当前bytebuff中
+    int copy_data_to_buffer(const void *data, int size);
+    // 从bytebuff中拷贝data个字节到data中
+    int copy_data_from_buffer(void *data, int size);
+
     // 获取buff缓冲指针， 用于不修改内部读写位置而进行的预览
     int8_t* get_buffer(void);
     // 获取起始位置
@@ -67,30 +98,6 @@ public:
     int get_prev_pos(int curr_pos);
     // 获取结束位置
     int get_end_pos(void);
-
-    bool empty(void);
-    bool full(void);
-    int data_size(void);
-    int idle_size();
-    int clear(void);
-
-    // 获取错误码，只在错误发生后调用才有效
-    int get_error(void);
-    // 根据错误码返回错误消息
-    string get_err_msg(int errno);
-    // 获取错消息，只在错误发生后调用才有效
-    string get_err_msg(void);
-
-    // 重载操作符
-    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
-    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
-    
-private:
-    void next_read_pos(int offset = 1);
-    void next_write_pos(int offset = 1);
-
-    int copy_data_to_buffer(const void *data, int size);
-    int copy_data_from_buffer(void *data, int size);
 
 private:
     vector<int8_t> buffer_;
@@ -103,14 +110,61 @@ private:
     int max_buffer_size_;
 
     int errno_;
+
+    ByteBuffer_Iterator bytebuff_iterator_;
 };
 
+// 查看当数据变动是迭代器是否有影响
 
-
-// 迭代器
-struct ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t> 
+// ByteBuffer 迭代器
+class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t> 
 {
+    friend class ByteBuffer;
+public:
+    explicit ByteBuffer_Iterator(ByteBuffer &buff)
+            : buff_(buff), curr_pos_(){}
 
+    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
+    {
+        buff_ = src.buff_;
+        curr_pos_ = src.curr_pos_;
+    }
+
+    int8_t& operator*()
+    {
+        return buff_.get_buffer()[curr_pos_];
+    }
+
+    ByteBuffer_Iterator* operator++()
+    {
+        if (curr_pos_ == buff_.get_end_pos())
+        {
+            return this;
+        }
+        curr_pos_ = buff_.get_next_pos(curr_pos_);
+        return this;
+    }
+
+    ByteBuffer_Iterator* operator--()
+    {
+        if (curr_pos_ == buff_.get_start_pos())
+        {
+            return this;
+        }
+        curr_pos_ = buff_.get_prev_pos(curr_pos_);
+        return this;
+    }
+
+    bool operator<(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ < iter.curr_pos_;}
+    bool operator==(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ == iter.curr_pos_;}
+    bool operator!=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ != iter.curr_pos_;}
+    bool operator>(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ > iter.curr_pos_;}
+    bool operator<=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ <= iter.curr_pos_;}
+    bool operator>=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ >= iter.curr_pos_;}
+
+private:
+    ByteBuffer &buff_;
+    int8_t curr_pos_;
 };
 
 #endif

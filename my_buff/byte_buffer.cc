@@ -417,7 +417,7 @@ ByteBuffer::get_err_msg(void)
 }
 
 string 
-ByteBuffer::get_err_msg(int errno)
+ByteBuffer::get_err_msg(int err)
 {
     string error_msg;
     switch(errno_) {
