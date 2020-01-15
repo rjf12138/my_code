@@ -17,7 +17,7 @@ class ByteBuffer_Iterator;
 class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
-    ByteBuffer(int max_buffer_size = 1024);
+    ByteBuffer(int max_buffer_size = 64);
     virtual ~ByteBuffer();
 
     int read_int8(int8_t &val);
@@ -64,7 +64,8 @@ public:
     int data_size(void);
     int idle_size();
     int clear(void);
-
+    // 重新分配缓冲区大小(只能向上增长)
+    int resize(uint32_t size);
 
     // 获取错误码，只在错误发生后调用才有效
     int get_error(void);
@@ -72,11 +73,16 @@ public:
     string get_err_msg(int err);
     // 获取错消息，只在错误发生后调用才有效
     string get_err_msg(void);
-
-    // 重载操作符
-    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
-    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
     
+    // 返回起始结束迭代器
+    ByteBuffer_Iterator* begin(void);
+    ByteBuffer_Iterator* end(void);
+
+        // 重载操作符
+    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    friend bool operator==(ByteBuffer &lhs, ByteBuffer &rhs);
+    ByteBuffer& operator=(const ByteBuffer& src);
+
 private:
     // 下一个读的位置
     void next_read_pos(int offset = 1);
@@ -100,12 +106,13 @@ private:
     int get_end_pos(void);
 
 private:
-    vector<int8_t> buffer_;
+    vector<int8_t> buffer_; // 修改为shared_ptr<int8_t>指针来修改
     Mutex lock_;
 
     int start_read_pos_;
     int start_write_pos_;
 
+    int incr_size;  // 增加缓存大小时，额外增加的大小
     int data_size_;
     int max_buffer_size_;
 
@@ -113,8 +120,6 @@ private:
 
     ByteBuffer_Iterator bytebuff_iterator_;
 };
-
-// 查看当数据变动是迭代器是否有影响
 
 // ByteBuffer 迭代器
 class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t> 
@@ -155,12 +160,9 @@ public:
         return this;
     }
 
-    bool operator<(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ < iter.curr_pos_;}
+    // 只支持 == 和 != 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ == iter.curr_pos_;}
     bool operator!=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ != iter.curr_pos_;}
-    bool operator>(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ > iter.curr_pos_;}
-    bool operator<=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ <= iter.curr_pos_;}
-    bool operator>=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ >= iter.curr_pos_;}
 
 private:
     ByteBuffer &buff_;

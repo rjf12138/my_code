@@ -1,7 +1,8 @@
 #include "byte_buffer.h"
 
-ByteBuffer::ByteBuffer(int max_buffer_size = 1024)
+ByteBuffer::ByteBuffer(int max_buffer_size)
 {
+    incr_size = 100;
     max_buffer_size_ = max_buffer_size;
     buffer_.reserve(max_buffer_size_);
     this->clear();
@@ -34,6 +35,7 @@ int ByteBuffer::get_start_pos(void)
     errno_ = BYTE_BUFF_SUCCESS;
     return start_read_pos_;
 }
+
 int ByteBuffer::get_next_pos(int curr_pos)
 {
     errno_ = BYTE_BUFF_SUCCESS;
@@ -74,6 +76,13 @@ int ByteBuffer::idle_size()
 {
     errno_ = BYTE_BUFF_SUCCESS;
     return (max_buffer_size_ - data_size_);
+}
+
+int 
+ByteBuffer::resize(uint32_t size)
+{
+    ByteBuffer tmp_buf(max_buffer_size_ + size + incr_size);
+    tmp_buf = *this;
 }
 
 bool ByteBuffer::empty(void)
@@ -235,6 +244,7 @@ int ByteBuffer::write_int16(int16_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(int16_t));
 }
+
 int ByteBuffer::write_int32(int32_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(int32_t));
@@ -252,6 +262,7 @@ int ByteBuffer::write_string(string str)
 
     return this->copy_data_to_buffer(buf, strlen(buf) + 1); // 加1是为了加个'\0'字符
 }
+
 int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match = false)
 {
     if (buf == NULL) {
@@ -270,6 +281,7 @@ int ByteBuffer::read_int8_lock(int8_t &val)
 
     return ret_size;
 }
+
 int ByteBuffer::read_int16_lock(int16_t &val)
 {
     lock_.lock();
@@ -278,6 +290,7 @@ int ByteBuffer::read_int16_lock(int16_t &val)
 
     return ret_size;
 }
+
 int ByteBuffer::read_int32_lock(int32_t &val)
 {
     lock_.lock();
@@ -455,7 +468,7 @@ ByteBuffer::get_err_msg(int err)
     return error_msg;
 }
 
-///////////重载操作符/////////////////////////
+//////////////////////// 重载操作符 /////////////////////////
 
 ByteBuffer 
 operator+(const ByteBuffer &lhs, const ByteBuffer &rhs)
@@ -469,7 +482,31 @@ operator+(const ByteBuffer &lhs, const ByteBuffer &rhs)
 }
 
 bool 
-operator==(const ByteBuffer &lhs, const ByteBuffer &rhs)
+operator==(ByteBuffer &lhs, ByteBuffer &rhs)
+{
+    auto lhs_iter = lhs.begin();
+    auto rhs_iter = rhs.begin();
+
+    while (true) {
+        if (lhs_iter == lhs.end() && rhs_iter == rhs.end()) {
+            return true;
+        } else if (lhs_iter != lhs.end() && rhs_iter == rhs.end()) {
+            return false;
+        } if (lhs_iter == lhs.end() && rhs_iter != rhs.end()) {
+            return false;
+        }
+
+        if (*lhs_iter != *rhs_iter) {
+            return false;
+        }
+
+        lhs_iter++;
+        rhs_iter++;
+    }
+}
+
+ByteBuffer& 
+ByteBuffer::operator=(const ByteBuffer& src)
 {
     
 }
