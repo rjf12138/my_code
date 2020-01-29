@@ -78,7 +78,7 @@ public:
     ByteBuffer_Iterator* begin(void);
     ByteBuffer_Iterator* end(void);
 
-        // 重载操作符
+    // 重载操作符
     friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
     friend bool operator==(ByteBuffer &lhs, ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);

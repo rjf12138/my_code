@@ -27,6 +27,7 @@ using namespace std;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 
 ////////////// defined by myself ////////////////////////
 
