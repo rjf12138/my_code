@@ -1,10 +1,3 @@
-/*
-*   start_pos 指向第一个可读/写位置， end_pos 指向最后一个可读写之后的位置
-*   整个buffer采用循环队列的方式保存数据
-*   可能还要考虑高低字节的顺序，目前先不考虑
-*   需要让buff自己增大空间的功能
-*/
-
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
@@ -75,8 +68,8 @@ public:
     string get_err_msg(void);
     
     // 返回起始结束迭代器
-    ByteBuffer_Iterator* begin(void);
-    ByteBuffer_Iterator* end(void);
+    shared_ptr<ByteBuffer_Iterator> begin(void);
+    shared_ptr<ByteBuffer_Iterator> end(void);
 
     // 重载操作符
     friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
@@ -118,10 +111,10 @@ private:
 
     int errno_;
 
-    ByteBuffer_Iterator bytebuff_iterator_;
+    shared_ptr<ByteBuffer_Iterator> bytebuff_iter_;
 };
 
-// ByteBuffer 迭代器
+////////////////////////// ByteBuffer 迭代器 //////////////////////////////////////
 class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t> 
 {
     friend class ByteBuffer;
@@ -160,10 +153,14 @@ public:
         return this;
     }
 
-    // 只支持 == 和 != 其他的比较都不支持
+    // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ == iter.curr_pos_;}
     bool operator!=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ != iter.curr_pos_;}
-
+    bool operator=(const ByteBuffer_Iterator& src) {
+        buff_ = src.buff_;
+        curr_pos_ = src.curr_pos_;
+    }
+    
 private:
     ByteBuffer &buff_;
     int8_t curr_pos_;

@@ -1,4 +1,4 @@
-#include "byte_buffer.h"
+#include "../inc/byte_buffer.h"
 
 ByteBuffer::ByteBuffer(int max_buffer_size)
 {
@@ -95,6 +95,19 @@ bool ByteBuffer::full(void)
 {
     errno_ = BYTE_BUFF_SUCCESS;
     return this->idle_size() == 0 ? true : false;
+}
+
+shared_ptr<ByteBuffer_Iterator> 
+ByteBuffer::begin(void)
+{
+    bytebuff_iter_ = make_shared<ByteBuffer_Iterator>(*this);
+    return bytebuff_iter_;
+}
+
+shared_ptr<ByteBuffer_Iterator> 
+ByteBuffer::end(void)
+{
+    // 实现end()
 }
 
 int ByteBuffer::copy_data_to_buffer(const void *data, int size)
@@ -508,5 +521,15 @@ operator==(ByteBuffer &lhs, ByteBuffer &rhs)
 ByteBuffer& 
 ByteBuffer::operator=(const ByteBuffer& src)
 {
-    
+    buffer_ = src.buffer_;
+    lock_ = src.lock_;
+    start_read_pos_ = src.start_read_pos_;
+    start_write_pos_ = src.start_write_pos_;
+    incr_size = src.incr_size;
+    data_size_ = src.data_size_;
+    max_buffer_size_ = src.max_buffer_size_;
+    errno_ = src.errno_;
+    bytebuff_iterator_ = src.bytebuff_iterator_;
+
+    return *this;
 }
