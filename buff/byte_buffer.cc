@@ -1,4 +1,4 @@
-#include "../inc/byte_buffer.h"
+#include "./inc/byte_buffer.h"
 
 ByteBuffer::ByteBuffer(int max_buffer_size)
 {
@@ -13,13 +13,6 @@ ByteBuffer::~ByteBuffer()
     this->clear();
 }
 
-int8_t*
-ByteBuffer::get_buffer(void)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return buffer_.data;
-}
-
 int ByteBuffer::clear(void)
 {
     errno_ = BYTE_BUFF_SUCCESS;
@@ -28,30 +21,6 @@ int ByteBuffer::clear(void)
     start_write_pos_ = 0;
 
     return 0;
-}
-
-int ByteBuffer::get_start_pos(void)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return start_read_pos_;
-}
-
-int ByteBuffer::get_next_pos(int curr_pos)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return (curr_pos == start_write_pos_) ? start_write_pos_ : (curr_pos + 1) % max_buffer_size_;
-}
-
-int ByteBuffer::get_prev_pos(int curr_pos)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return (curr_pos == start_read_pos_) ? start_read_pos_ : (curr_pos + max_buffer_size_ - 1) % max_buffer_size_;
-}
-
-int ByteBuffer::get_end_pos(void)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return start_write_pos_;
 }
 
 void ByteBuffer::next_read_pos(int offset = 1)
@@ -79,9 +48,9 @@ int ByteBuffer::idle_size()
 }
 
 int 
-ByteBuffer::resize(uint32_t size)
+ByteBuffer::resize(void)
 {
-    ByteBuffer tmp_buf(max_buffer_size_ + size + incr_size);
+    ByteBuffer tmp_buf(max_buffer_size_ * 2);
     tmp_buf = *this;
 }
 
@@ -97,24 +66,24 @@ bool ByteBuffer::full(void)
     return this->idle_size() == 0 ? true : false;
 }
 
-shared_ptr<ByteBuffer_Iterator> 
+ByteBuffer_Iterator
 ByteBuffer::begin(void)
 {
-    bytebuff_iter_ = make_shared<ByteBuffer_Iterator>(*this);
-    return bytebuff_iter_;
+    ByteBuffer_Iterator tmp(*this);
+    return tmp.begin();
 }
 
-shared_ptr<ByteBuffer_Iterator> 
+ByteBuffer_Iterator
 ByteBuffer::end(void)
 {
-    // 实现end()
+    ByteBuffer_Iterator tmp(*this);
+    return tmp.end();
 }
 
 int ByteBuffer::copy_data_to_buffer(const void *data, int size)
 {
     if (this->idle_size() < size) {
-        errno_ = BYTE_BUFF_OUT_OF_RANGE;
-        return -1;
+        this->resize();
     }
 
     int8_t *data_ptr = (int8_t*)data;
@@ -140,17 +109,13 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
 int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
 {
     if (size > this->data_size() - start) {
-        errno_ = BYTE_BUFF_OUT_OF_RANGE;
-        return -1;
+        this->resize();
     }
 
-    int read_pos = start + buf.get_start_pos();
-    int8_t *data = buf.get_buffer();
-    for (int i = 0; i < size; ++i) {
-        if (this->write_int8(data[read_pos]) == -1) {
+    for (auto iter = buf.begin(); iter != buf.end(); ++iter) {
+        if (this->write_int8(*iter) == -1) {
             return -1;
         }
-        read_pos = buf.get_next_pos(read_pos);
     }
 
     errno_ = BYTE_BUFF_SUCCESS;
@@ -160,8 +125,7 @@ int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
 int ByteBuffer::copy_data_from_buffer(void *data, int size)
 {
     if (this->data_size() < size) {
-        errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
-        return -1;
+        this->resize();
     }
 
     int8_t *data_ptr = (int8_t*)data;
@@ -234,15 +198,6 @@ int ByteBuffer::read_bytes(void *buf, int buf_size, bool match = false)
     if (buf == NULL) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
         return -1;
-    }
-
-    if (this->data_size() < buf_size ) { 
-        if (match == false) {
-            buf_size = this->data_size();
-        } else {
-            errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
-            return -1;
-        }
     }
 
     return this->copy_data_from_buffer(buf, buf_size);
@@ -529,7 +484,15 @@ ByteBuffer::operator=(const ByteBuffer& src)
     data_size_ = src.data_size_;
     max_buffer_size_ = src.max_buffer_size_;
     errno_ = src.errno_;
-    bytebuff_iterator_ = src.bytebuff_iterator_;
+
+    return *this;
+}
+
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator=(const ByteBuffer_Iterator& src)
+{
+    buff_ = src.buff_;
+    curr_pos_ = src.curr_pos_;
 
     return *this;
 }

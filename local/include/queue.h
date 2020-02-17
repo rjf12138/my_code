@@ -12,7 +12,7 @@ public:
 
     int push(T &data);
     int pop(T &data);
-    int size(void) {return current_size;}
+    int size(void) {return current_size_;}
     bool empty(void) {return current_size_ == 0 ? true : false;}
 private:
     queue<T> data_queue_;

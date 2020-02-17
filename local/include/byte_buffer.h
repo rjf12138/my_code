@@ -55,10 +55,10 @@ public:
     bool empty(void);
     bool full(void);
     int data_size(void);
-    int idle_size();
+    int idle_size(void);
     int clear(void);
     // 重新分配缓冲区大小(只能向上增长)
-    int resize(uint32_t size);
+    int resize(void);
 
     // 获取错误码，只在错误发生后调用才有效
     int get_error(void);
@@ -68,8 +68,8 @@ public:
     string get_err_msg(void);
     
     // 返回起始结束迭代器
-    shared_ptr<ByteBuffer_Iterator> begin(void);
-    shared_ptr<ByteBuffer_Iterator> end(void);
+    ByteBuffer_Iterator begin(void);
+    ByteBuffer_Iterator end(void);
 
     // 重载操作符
     friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
@@ -87,17 +87,6 @@ private:
     // 从bytebuff中拷贝data个字节到data中
     int copy_data_from_buffer(void *data, int size);
 
-    // 获取buff缓冲指针， 用于不修改内部读写位置而进行的预览
-    int8_t* get_buffer(void);
-    // 获取起始位置
-    int get_start_pos(void);
-    // 根据当前位置， 获取下一个字节位置
-    int get_next_pos(int curr_pos);
-    // 根据当前位置， 回到上一个读取位置
-    int get_prev_pos(int curr_pos);
-    // 获取结束位置
-    int get_end_pos(void);
-
 private:
     vector<int8_t> buffer_; // 修改为shared_ptr<int8_t>指针来修改
     Mutex lock_;
@@ -111,7 +100,8 @@ private:
 
     int errno_;
 
-    shared_ptr<ByteBuffer_Iterator> bytebuff_iter_;
+    shared_ptr<ByteBuffer_Iterator> bytebuff_iter_start_;
+    shared_ptr<ByteBuffer_Iterator> bytebuff_iter_end_;
 };
 
 ////////////////////////// ByteBuffer 迭代器 //////////////////////////////////////
@@ -122,48 +112,94 @@ public:
     explicit ByteBuffer_Iterator(ByteBuffer &buff)
             : buff_(buff), curr_pos_(){}
 
+    ByteBuffer_Iterator begin() 
+    {
+        curr_pos_ = buff_.start_read_pos_;
+        return *this;
+    }
+
+    ByteBuffer_Iterator end()
+    {
+        curr_pos_ = buff_.start_write_pos_;
+        return *this;
+    }
+
     ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
     {
         buff_ = src.buff_;
         curr_pos_ = src.curr_pos_;
     }
 
-    int8_t& operator*()
+    int8_t operator*()
     {
-        return buff_.get_buffer()[curr_pos_];
+        return buff_.buffer_[curr_pos_];
     }
-
-    ByteBuffer_Iterator* operator++()
+    // 前置++
+    ByteBuffer_Iterator& operator++()
     {
-        if (curr_pos_ == buff_.get_end_pos())
+        if (curr_pos_ == buff_.start_write_pos_)
         {
-            return this;
+            return *this;
         }
-        curr_pos_ = buff_.get_next_pos(curr_pos_);
-        return this;
-    }
 
-    ByteBuffer_Iterator* operator--()
+        if (curr_pos_ != buff_.start_write_pos_) {
+            curr_pos_ = (curr_pos + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+        }
+
+        return *this;
+    }
+    // 后置++
+    ByteBuffer_Iterator& operator++(int)
     {
-        if (curr_pos_ == buff_.get_start_pos())
+        if (curr_pos_ == buff_.start_write_pos_)
         {
-            return this;
+            return *this;
         }
-        curr_pos_ = buff_.get_prev_pos(curr_pos_);
-        return this;
-    }
 
+        ByteBuffer_Iterator tmp = *this;
+        if (curr_pos_ != buff_.start_write_pos_) {
+            curr_pos_ = (curr_pos + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+        }
+
+        return tmp;
+    }
+    // 前置--
+    ByteBuffer_Iterator& operator--()
+    {
+        if (curr_pos_ == buff_.start_read_pos_ || curr_pos_ == buff_.start_write_pos_) {
+            curr_pos_ = buff_.start_write_pos_;
+            return *this;
+        }
+
+        if (curr_pos_ != buff.start_read_pos_) {
+            curr_pos_ = (curr_pos_ + buff.max_buffer_size_ - 1) % buff.max_buffer_size_;
+        }
+
+        return *this;
+    }
+    // 后置--
+    ByteBuffer_Iterator& operator--(int)
+    {
+        if (curr_pos_ == buff_.start_read_pos_ || curr_pos_ == buff_.start_write_pos_) {
+            curr_pos_ = buff_.start_write_pos_;
+            return *this;
+        }
+
+        ByteBuffer_Iterator tmp = *this;
+        if (curr_pos_ != buff.start_read_pos_) {
+            curr_pos_ = (curr_pos_ + buff.max_buffer_size_ - 1) % buff.max_buffer_size_;
+        }
+
+        return tmp;
+    }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ == iter.curr_pos_;}
     bool operator!=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ != iter.curr_pos_;}
-    bool operator=(const ByteBuffer_Iterator& src) {
-        buff_ = src.buff_;
-        curr_pos_ = src.curr_pos_;
-    }
+    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src); // 有问题
     
 private:
     ByteBuffer &buff_;
-    int8_t curr_pos_;
+    int32_t curr_pos_;
 };
 
 #endif
