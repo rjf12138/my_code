@@ -4,4 +4,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(ByteBuffer_Test ByteBuffer_Test.cc)
 
-target_link_libraries(ByteBuffer_Test buff)
+target_link_libraries(ByteBuffer_Test buffer)
+target_link_libraries(ByteBuffer_Test gtest)
+target_link_libraries(ByteBuffer_Test pthread)

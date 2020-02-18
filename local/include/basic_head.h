@@ -32,9 +32,5 @@ using namespace std;
 ////////////// defined by myself ////////////////////////
 
 #include "error.h"
-#include "byte_buffer.h"
-#include "queue.h"
-#include "thread.h"
-#include "mutex.h"
 
 #endif

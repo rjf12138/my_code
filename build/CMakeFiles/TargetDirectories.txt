@@ -1,8 +1,0 @@
-/home/ruanjian/workspace/project/my_code/build/CMakeFiles/rebuild_cache.dir
-/home/ruanjian/workspace/project/my_code/build/CMakeFiles/edit_cache.dir
-/home/ruanjian/workspace/project/my_code/build/buff/CMakeFiles/rebuild_cache.dir
-/home/ruanjian/workspace/project/my_code/build/buff/CMakeFiles/buffer.dir
-/home/ruanjian/workspace/project/my_code/build/buff/CMakeFiles/edit_cache.dir
-/home/ruanjian/workspace/project/my_code/build/buff/test/CMakeFiles/rebuild_cache.dir
-/home/ruanjian/workspace/project/my_code/build/buff/test/CMakeFiles/ByteBuffer_Test.dir
-/home/ruanjian/workspace/project/my_code/build/buff/test/CMakeFiles/edit_cache.dir

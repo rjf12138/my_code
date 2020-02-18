@@ -12,7 +12,7 @@ public:
     virtual int trylock(void);
     virtual int unlock(void);
 
-    virtual int get_errno(void);
+    virtual int get_errno(void) {};
 private:
     int errno_;
     pthread_mutex_t mutex_;

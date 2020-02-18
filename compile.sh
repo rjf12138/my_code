@@ -26,7 +26,7 @@ function help_info()
 {
     echo "Usage: $0 [ OPTIONS ]"
     echo "OPTIONS := { -h[help] | -cr[clean and rebuild] | -r[rebuild] |"
-    echo            "            -c[clean all] -e[enter bin directory] | -w[new window]}"
+    echo            "   -c[clean all] -e[enter bin directory][dir] | -w[new window]}"
     exit 0
 }
 
@@ -53,12 +53,13 @@ function compile()
 
 function enter_bin_directory()
 {
-    if [ ! -d "build" ]
+    dir=build/$1/test/bin
+    if [ ! -d "$dir" ]
     then
-        echo "Can't find \"build\" directory."
+        echo "Can't find \"$dir\" directory."
         exit 0
     fi
-    cd build/test/bin
+    cd $dir
     exec gnome-terminal
 }
 
@@ -82,7 +83,11 @@ case $1 in
     clean_all
     ;;
 "-e")
-    enter_bin_directory
+    if [ $# -ne 2 ]
+    then
+        help_info
+    fi
+    enter_bin_directory $2
     ;;
 "-w")
     gnome-terminal

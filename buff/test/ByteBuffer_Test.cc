@@ -1,6 +1,6 @@
-#include "../inc/basic_head.h"
-#include "../inc/byte_buffer.h"
-#include "../inc/gtest/gtest.h"
+#include "basic_head.h"
+#include "byte_buffer.h"
+#include "gtest/gtest.h"
 
 class ByteBuffer_Test : public ::testing::Test {
 protected:

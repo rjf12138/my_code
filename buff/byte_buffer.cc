@@ -1,4 +1,4 @@
-#include "./inc/byte_buffer.h"
+#include "byte_buffer.h"
 
 ByteBuffer::ByteBuffer(int max_buffer_size)
 {
@@ -23,13 +23,13 @@ int ByteBuffer::clear(void)
     return 0;
 }
 
-void ByteBuffer::next_read_pos(int offset = 1)
+void ByteBuffer::next_read_pos(int offset)
 {
     errno_ = BYTE_BUFF_SUCCESS;
     start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
 }
 
-void ByteBuffer::next_write_pos(int offset = 1)
+void ByteBuffer::next_write_pos(int offset)
 {
     errno_ = BYTE_BUFF_SUCCESS;
     start_write_pos_ = (start_write_pos_ + offset) % max_buffer_size_;
@@ -87,7 +87,7 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
     }
 
     int8_t *data_ptr = (int8_t*)data;
-    int8_t *ptr = buffer_.data;
+    int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以写
     int remain = max_buffer_size_ - start_write_pos_;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
@@ -129,7 +129,7 @@ int ByteBuffer::copy_data_from_buffer(void *data, int size)
     }
 
     int8_t *data_ptr = (int8_t*)data;
-    int8_t *ptr = buffer_.data;
+    int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以读
     int end_point = start_read_pos_ > start_write_pos_?max_buffer_size_:start_write_pos_;
     int remain = end_point - start_read_pos_;
@@ -193,7 +193,7 @@ int ByteBuffer::read_string(string &str)
     return str_size - 1; // 计算字符串长度时，‘\0’ 不计入
 }
 
-int ByteBuffer::read_bytes(void *buf, int buf_size, bool match = false)
+int ByteBuffer::read_bytes(void *buf, int buf_size, bool match)
 {
     if (buf == NULL) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
@@ -231,7 +231,7 @@ int ByteBuffer::write_string(string str)
     return this->copy_data_to_buffer(buf, strlen(buf) + 1); // 加1是为了加个'\0'字符
 }
 
-int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match = false)
+int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match)
 {
     if (buf == NULL) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
@@ -286,7 +286,7 @@ int ByteBuffer::read_string_lock(string &str)
     return ret_size;
 }
 
-int ByteBuffer::read_bytes_lock(void *buf, int buf_size, bool match = false)
+int ByteBuffer::read_bytes_lock(void *buf, int buf_size, bool match)
 {
     lock_.lock();
     int ret_size = this->read_bytes(buf, buf_size, match);
@@ -337,7 +337,7 @@ int ByteBuffer::write_string_lock(string str)
 
     return ret_size;
 }
-int ByteBuffer::write_bytes_lock(const void *buf, int buf_size, bool match = false)
+int ByteBuffer::write_bytes_lock(const void *buf, int buf_size, bool match)
 {
     lock_.lock();
     int ret_size = this->write_bytes(buf, buf_size, match);
@@ -473,6 +473,30 @@ operator==(ByteBuffer &lhs, ByteBuffer &rhs)
     }
 }
 
+bool 
+operator!=(ByteBuffer &lhs, ByteBuffer &rhs)
+{
+    if (lhs.data_size() == rhs.data_size()) {
+        return false;
+    }
+    auto lhs_iter = lhs.begin();
+    auto rhs_iter = rhs.begin();
+
+    while (true) {
+        if (lhs_iter == lhs.end() && rhs_iter == rhs.end()) {
+            return false;
+        }
+
+        if (*lhs_iter != *rhs_iter) {
+            return true;
+        }
+
+        lhs_iter++;
+        rhs_iter++;
+    }
+    return false;
+}
+
 ByteBuffer& 
 ByteBuffer::operator=(const ByteBuffer& src)
 {
@@ -484,15 +508,6 @@ ByteBuffer::operator=(const ByteBuffer& src)
     data_size_ = src.data_size_;
     max_buffer_size_ = src.max_buffer_size_;
     errno_ = src.errno_;
-
-    return *this;
-}
-
-ByteBuffer_Iterator& 
-ByteBuffer_Iterator::operator=(const ByteBuffer_Iterator& src)
-{
-    buff_ = src.buff_;
-    curr_pos_ = src.curr_pos_;
 
     return *this;
 }

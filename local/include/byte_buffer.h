@@ -74,6 +74,7 @@ public:
     // 重载操作符
     friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
     friend bool operator==(ByteBuffer &lhs, ByteBuffer &rhs);
+    friend bool operator!=(ByteBuffer &lhs, ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);
 
 private:
@@ -126,8 +127,12 @@ public:
 
     ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
     {
-        buff_ = src.buff_;
-        curr_pos_ = src.curr_pos_;
+        if (src != *this) {
+            buff_ = src.buff_;
+            curr_pos_ = src.curr_pos_;
+        }
+
+        return *this;
     }
 
     int8_t operator*()
@@ -143,7 +148,7 @@ public:
         }
 
         if (curr_pos_ != buff_.start_write_pos_) {
-            curr_pos_ = (curr_pos + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+            curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
         }
 
         return *this;
@@ -156,9 +161,9 @@ public:
             return *this;
         }
 
-        ByteBuffer_Iterator tmp = *this;
+        ByteBuffer_Iterator &tmp = *this;
         if (curr_pos_ != buff_.start_write_pos_) {
-            curr_pos_ = (curr_pos + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+            curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
         }
 
         return tmp;
@@ -171,8 +176,8 @@ public:
             return *this;
         }
 
-        if (curr_pos_ != buff.start_read_pos_) {
-            curr_pos_ = (curr_pos_ + buff.max_buffer_size_ - 1) % buff.max_buffer_size_;
+        if (curr_pos_ != buff_.start_read_pos_) {
+            curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
         }
 
         return *this;
@@ -185,17 +190,20 @@ public:
             return *this;
         }
 
-        ByteBuffer_Iterator tmp = *this;
-        if (curr_pos_ != buff.start_read_pos_) {
-            curr_pos_ = (curr_pos_ + buff.max_buffer_size_ - 1) % buff.max_buffer_size_;
+        ByteBuffer_Iterator &tmp = *this;
+        if (curr_pos_ != buff_.start_read_pos_) {
+            curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
         }
 
         return tmp;
     }
     // 只支持 == ,!= , = 其他的比较都不支持
-    bool operator==(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ == iter.curr_pos_;}
-    bool operator!=(const ByteBuffer_Iterator& iter) const {return this->curr_pos_ != iter.curr_pos_;}
-    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src); // 有问题
+    bool operator==(const ByteBuffer_Iterator& iter) const {
+        return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
+    }
+    bool operator!=(const ByteBuffer_Iterator& iter) const {
+        return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
+    }
     
 private:
     ByteBuffer &buff_;
