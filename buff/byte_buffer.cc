@@ -50,9 +50,15 @@ int ByteBuffer::idle_size()
 int 
 ByteBuffer::resize(void)
 {
-    ByteBuffer tmp_buf(max_buffer_size_ * 2);
-    tmp_buf = *this;
+    max_buffer_size_ = max_buffer_size_ * 2;
+    ByteBuffer tmp_buf = *this;
+    buffer_.reserve(max_buffer_size_);
+    this->clear();
+    *this = tmp_buf;
+    return max_buffer_size_;
+    
 }
+
 
 bool ByteBuffer::empty(void)
 {
@@ -82,7 +88,7 @@ ByteBuffer::end(void)
 
 int ByteBuffer::copy_data_to_buffer(const void *data, int size)
 {
-    if (this->idle_size() < size) {
+    if (this->idle_size() <= size) {
         this->resize();
     }
 
@@ -90,13 +96,15 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
     int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以写
     int remain = max_buffer_size_ - start_write_pos_;
+    std::cout << "start_read_pos: " << start_read_pos_ << " start_write_pos: " << start_write_pos_ << std::endl;
+    std::cout << "remain: " << remain << " size: " << size << std::endl;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
         memcpy(ptr+start_write_pos_, data_ptr, size);
         this->next_write_pos(size);
     } else {
         memcpy(ptr+start_write_pos_, data_ptr, remain);
         this->next_write_pos(remain); // 将buff最后的空间写满
-        memcpy(ptr, data_ptr + remain, size - remain);
+        memcpy(ptr+start_write_pos_, data_ptr + remain, size - remain);
         this->next_write_pos(size - remain); // 从buff开头在将剩余的数据写入
     }
 
@@ -125,21 +133,24 @@ int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
 int ByteBuffer::copy_data_from_buffer(void *data, int size)
 {
     if (this->data_size() < size) {
-        this->resize();
+        errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
+        return -1;
     }
 
     int8_t *data_ptr = (int8_t*)data;
     int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以读
-    int end_point = start_read_pos_ > start_write_pos_?max_buffer_size_:start_write_pos_;
+    int end_point = start_read_pos_>start_write_pos_?max_buffer_size_:start_write_pos_;
     int remain = end_point - start_read_pos_;
+    std::cout << "start_read_pos: " << start_read_pos_ << " start_write_pos: " << start_write_pos_ << std::endl;
+    std::cout << "end_point: " << end_point << " remain: " << remain << " size: " << size << std::endl;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
-        memcpy(data_ptr, ptr+start_read_pos_, size);
+        memcpy(data_ptr, ptr + start_read_pos_, size);
         this->next_read_pos(size);
     } else {
-        memcpy(data_ptr, ptr+start_read_pos_, remain);
+        memcpy(data_ptr, ptr + start_read_pos_, remain);
         this->next_read_pos(remain); // 将buff最后的空间读取
-        memcpy(data_ptr, ptr, size - remain);
+        memcpy(data_ptr + remain, ptr, size - remain);
         this->next_read_pos(size - remain); // 从buff开头在将剩余的数据读取
     }
 
@@ -228,7 +239,8 @@ int ByteBuffer::write_string(string str)
     char buf[MAX_STRING_SIZE] = { 0 };
     snprintf(buf, MAX_STRING_SIZE - 1, "%s", str.c_str());
 
-    return this->copy_data_to_buffer(buf, strlen(buf) + 1); // 加1是为了加个'\0'字符
+    // 加1是为了加个'\0'字符, -1 是为了返回长度时去掉'\0'
+    return this->copy_data_to_buffer(buf, strlen(buf) + 1) -1;
 }
 
 int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match)
