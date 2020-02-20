@@ -13,7 +13,8 @@ enum ERROR_BYTE_BUFF
     BYTE_BUFF_STR_READ_FAILED = -1004,
     BYTE_BUFF_OUTPUT_BUFFER_IS_NULL = -1005,
     BYTE_BUFF_OUT_OF_RANGE = -1006,
-    BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH = -1007
+    BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH = -1007,
+    BYTE_BUFF_CANT_FIND_STRING = -1008
 };
 
 #define STR_BYTE_BUFF_SUCCESS                       "byte_buff success"
@@ -25,5 +26,6 @@ enum ERROR_BYTE_BUFF
 #define STR_BYTE_BUFF_OUTPUT_BUFFER_IS_NULL         "output buff is NULL"
 #define STR_BYTE_BUFF_OUT_OF_RANGE                  "out of range"
 #define STR_BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH        "remain data is not enough"
+#define STR_BYTE_BUFF_CANT_FIND_STRING              "cant find string"
 
 #endif

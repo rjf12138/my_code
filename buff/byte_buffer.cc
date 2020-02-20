@@ -96,8 +96,6 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
     int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以写
     int remain = max_buffer_size_ - start_write_pos_;
-    std::cout << "start_read_pos: " << start_read_pos_ << " start_write_pos: " << start_write_pos_ << std::endl;
-    std::cout << "remain: " << remain << " size: " << size << std::endl;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
         memcpy(ptr+start_write_pos_, data_ptr, size);
         this->next_write_pos(size);
@@ -142,8 +140,6 @@ int ByteBuffer::copy_data_from_buffer(void *data, int size)
     // 检查buff数组后面是否有连续的内存可以读
     int end_point = start_read_pos_>start_write_pos_?max_buffer_size_:start_write_pos_;
     int remain = end_point - start_read_pos_;
-    std::cout << "start_read_pos: " << start_read_pos_ << " start_write_pos: " << start_write_pos_ << std::endl;
-    std::cout << "end_point: " << end_point << " remain: " << remain << " size: " << size << std::endl;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
         memcpy(data_ptr, ptr + start_read_pos_, size);
         this->next_read_pos(size);
@@ -188,17 +184,24 @@ int ByteBuffer::read_string(string &str)
         return -1;
     }
 
-    // 读取字符串最后的位置, 如果没读到'\0'，那读取长度为 0
+    // 读取字符串的长度
     int str_size = 0;
-    for (int i = start_read_pos_ ; i < start_write_pos_; ++i) {
-        if (buffer_[i] == '\0') {
-            str_size = i - start_read_pos_ + 1; // 加一是为了将'\0'这个字符也能读出来
+    auto iter = this->begin();
+    for (; iter != this->end(); ++iter) {
+        str_size++;
+        if (*iter == '\0') {
             break;
         }
     }
+    if (iter == this->end()) {
+        errno_ = BYTE_BUFF_CANT_FIND_STRING;
+        return -1;
+    }
 
     char buf[MAX_STRING_SIZE] = {0};
-    this->copy_data_from_buffer(buf, str_size);
+    if (this->copy_data_from_buffer(buf, str_size) == -1) {
+        return -1;
+    }
     str = buf;
 
     return str_size - 1; // 计算字符串长度时，‘\0’ 不计入
@@ -236,11 +239,8 @@ int ByteBuffer::write_int64(int64_t val)
 
 int ByteBuffer::write_string(string str)
 {
-    char buf[MAX_STRING_SIZE] = { 0 };
-    snprintf(buf, MAX_STRING_SIZE - 1, "%s", str.c_str());
-
     // 加1是为了加个'\0'字符, -1 是为了返回长度时去掉'\0'
-    return this->copy_data_to_buffer(buf, strlen(buf) + 1) -1;
+    return this->copy_data_to_buffer(str.c_str(), str.length() + 1) -1;
 }
 
 int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match)
@@ -433,14 +433,16 @@ ByteBuffer::get_err_msg(int err)
             error_msg = STR_BYTE_BUFF_STR_READ_FAILED;
             break;
         case BYTE_BUFF_OUTPUT_BUFFER_IS_NULL:
-            error_msg =STR_BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+            error_msg = STR_BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
             break;
         case BYTE_BUFF_OUT_OF_RANGE:
-            error_msg =STR_BYTE_BUFF_OUT_OF_RANGE;
+            error_msg = STR_BYTE_BUFF_OUT_OF_RANGE;
             break;
         case BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH:
-            error_msg =STR_BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
+            error_msg = STR_BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
             break;
+        case BYTE_BUFF_CANT_FIND_STRING:
+            error_msg = STR_BYTE_BUFF_CANT_FIND_STRING;
         default:
             error_msg = STR_UNKNOWN_ERROR;
     }
