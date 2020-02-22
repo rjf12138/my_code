@@ -1,6 +1,7 @@
-#include "basic_head.h"
 #include "byte_buffer.h"
 #include "gtest/gtest.h"
+
+using namespace my_util;
 
 namespace my {
 namespace project {
@@ -21,7 +22,7 @@ protected:
 };
 
 // 对非锁的读写函数循环测试
-TEST_F(ByteBuffer_Test, IsEmptyInitially) 
+TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write) 
 {
     int buff_size = 64;
     int test_cnt = 900000;
@@ -114,6 +115,32 @@ TEST_F(ByteBuffer_Test, IsEmptyInitially)
         ASSERT_EQ(val_stru.i16, stru.i16);
         ASSERT_EQ(strcmp(val_stru.str, stru.str), 0);
         ASSERT_EQ(strcmp(val_stru.buf, stru.buf), 0);
+    }
+}
+
+// 测试 buffer 空间增长
+TEST_F(ByteBuffer_Test, ByteBuffer_increase)
+{
+    ByteBuffer buff(1);
+    uint32_t n = 2;
+    for (int i = 0; i < 31; ++i) {
+        std::cout << "i: " << i << " n: " << n << std::endl;
+        for (int j = 0; j < n / 2; ++j) {
+            buff.write_int8('a');
+        }
+        ASSERT_EQ(buff.data_size() + buff.idle_size(), n);
+        ASSERT_EQ(buff.data_size(), n / 2);
+        ASSERT_EQ(buff.idle_size(), n / 2);
+        int8_t out;
+        for (int j = 0; j < n / 2; ++j) {
+            buff.read_int8(out);
+            ASSERT_EQ(buff.data_size() + buff.idle_size(), n);
+            ASSERT_EQ(buff.data_size(), n / 2 - j - 1);
+            ASSERT_EQ(buff.idle_size(), n / 2 + j + 1);
+        }
+
+        ASSERT_EQ(buff.empty(), true);
+        n = n * 2;
     }
 }
 

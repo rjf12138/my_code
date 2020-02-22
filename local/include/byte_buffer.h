@@ -6,11 +6,13 @@
 
 #define MAX_STRING_SIZE 512
 
+namespace my_util {
+
 class ByteBuffer_Iterator;
 class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
-    ByteBuffer(int max_buffer_size = 64);
+    ByteBuffer(int max_buffer_size = 2);
     virtual ~ByteBuffer();
 
     int read_int8(int8_t &val);
@@ -25,15 +27,6 @@ public:
     int write_int32(int32_t val);
     int write_int64(int64_t val);
     int write_string(string str);
-    /***************************************************** 
-    *  使用write_bytes写的是包含类成员的结构时，确保该类成员内不含指针
-    *  思考这样一种情况：
-    * struct test { string str; } a = {"hello"}, b;
-    * buff.write_bytes(&a, sizeof(test));
-    * buff.read_bytes(b, sizeof(test))
-    * a 和 b 相同, a 和 b 内部的指针指向同一个位置，程序结束时会对同一
-    * 个指针释放两次，从而报错double free or corruption (fasttop)
-    *******************************************************/
     int write_bytes(const void *buf, int buf_size, bool match = false);
 
     int read_int8_lock(int8_t &val);
@@ -50,9 +43,6 @@ public:
     int write_string_lock(string str);
     int write_bytes_lock(const void *buf, int buf_size, bool match = false);
 
-    // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
-    int copy_to_buffer(const ByteBuffer buf, uint32_t start, uint32_t size);
-
     // 网络字节序转换
     // 将缓存中的数据读取出来并转成主机字节序返回
     int read_int16_ntoh(int16_t &val);
@@ -66,8 +56,6 @@ public:
     int data_size(void);
     int idle_size(void);
     int clear(void);
-    int get_start_pos(void) const {return start_read_pos_;}
-    int get_end_pos(void) const {return start_write_pos_;}
     // 重新分配缓冲区大小(只能向上增长)
     int resize(void);
 
@@ -98,17 +86,19 @@ private:
     int copy_data_to_buffer(const void *data, int size);
     // 从bytebuff中拷贝data个字节到data中
     int copy_data_from_buffer(void *data, int size);
+    // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
+    int copy_to_buffer(const ByteBuffer buf, uint32_t start, uint32_t size);
 
 private:
     vector<int8_t> buffer_; // 修改为shared_ptr<int8_t>指针来修改
     Mutex lock_;
 
-    int start_read_pos_;
-    int start_write_pos_;
+    uint32_t start_read_pos_;
+    uint32_t start_write_pos_;
 
-    int incr_size;  // 增加缓存大小时，额外增加的大小
-    int data_size_;
-    int max_buffer_size_;
+    uint32_t incr_size;  // 增加缓存大小时，额外增加的大小
+    uint32_t data_size_;
+    uint32_t max_buffer_size_;
 
     int errno_;
 
@@ -211,5 +201,7 @@ private:
     ByteBuffer &buff_;
     int32_t curr_pos_;
 };
+
+}
 
 #endif

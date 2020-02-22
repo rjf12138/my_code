@@ -1,5 +1,7 @@
 #include "byte_buffer.h"
 
+namespace my_util {
+
 ByteBuffer::ByteBuffer(int max_buffer_size)
 {
     incr_size = 100;
@@ -88,7 +90,7 @@ ByteBuffer::end(void)
 
 int ByteBuffer::copy_data_to_buffer(const void *data, int size)
 {
-    if (this->idle_size() <= size) {
+    while (this->idle_size() <= size) {
         this->resize();
     }
 
@@ -114,7 +116,7 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
 
 int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
 {
-    if (size > this->data_size() - start) {
+    while (size >= this->idle_size()) {
         this->resize();
     }
 
@@ -524,4 +526,6 @@ ByteBuffer::operator=(const ByteBuffer& src)
     errno_ = src.errno_;
 
     return *this;
+}
+
 }
