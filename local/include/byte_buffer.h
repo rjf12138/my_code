@@ -4,9 +4,13 @@
 #include "basic_head.h"
 #include "mutex.h"
 
-#define MAX_STRING_SIZE 512
+#define MAX_STRING_SIZE     512
+#define MAX_BUFFER_SIZE     1*1024*1024*1024
 
 namespace my_util {
+
+typedef int64_t BUFSIZE_T;
+typedef vector<int8_t> BUFFTYPE_T;
 
 class ByteBuffer_Iterator;
 class ByteBuffer {
@@ -20,36 +24,36 @@ public:
     int read_int32(int32_t &val);
     int read_int64(int64_t &val);
     int read_string(string &str);
-    int read_bytes(void *buf, int buf_size, bool match = false);
+    BUFSIZE_T read_bytes(void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int write_int8(int8_t val);
     int write_int16(int16_t val);
     int write_int32(int32_t val);
     int write_int64(int64_t val);
     int write_string(string str);
-    int write_bytes(const void *buf, int buf_size, bool match = false);
+    BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int read_int8_lock(int8_t &val);
     int read_int16_lock(int16_t &val);
     int read_int32_lock(int32_t &val);
     int read_int64_lock(int64_t &val);
     int read_string_lock(string &str);
-    int read_bytes_lock(void *buf, int buf_size, bool match = false);
+    BUFSIZE_T read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int write_int8_lock(int8_t val);
     int write_int16_lock(int16_t val);
     int write_int32_lock(int32_t val);
     int write_int64_lock(int64_t val);
     int write_string_lock(string str);
-    int write_bytes_lock(const void *buf, int buf_size, bool match = false);
+    BUFSIZE_T write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     // 网络字节序转换
     // 将缓存中的数据读取出来并转成主机字节序返回
     int read_int16_ntoh(int16_t &val);
     int read_int32_ntoh(int32_t &val);
-    // 将数据转成字节序写入缓存
-    int write_int16_ntoh(const int16_t &val);
-    int write_int32_ntoh(const int32_t &val);
+    // 将主机字节序转成网络字节序写入缓存
+    int write_int16_hton(const int16_t &val);
+    int write_int32_hton(const int32_t &val);
 
     bool empty(void);
     bool full(void);
@@ -83,22 +87,22 @@ private:
     void next_write_pos(int offset = 1);
 
     // 将data中的数据拷贝size个字节到当前bytebuff中
-    int copy_data_to_buffer(const void *data, int size);
+    BUFSIZE_T copy_data_to_buffer(const void *data, BUFSIZE_T size);
     // 从bytebuff中拷贝data个字节到data中
-    int copy_data_from_buffer(void *data, int size);
+    BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
     // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
-    int copy_to_buffer(const ByteBuffer buf, uint32_t start, uint32_t size);
+    BUFSIZE_T copy_to_buffer(const ByteBuffer buf, BUFSIZE_T start, BUFSIZE_T size);
 
 private:
-    vector<int8_t> buffer_; // 修改为shared_ptr<int8_t>指针来修改
+    BUFFTYPE_T buffer_; // 修改为shared_ptr<int8_t>指针来修改
     Mutex lock_;
 
-    uint32_t start_read_pos_;
-    uint32_t start_write_pos_;
+    BUFSIZE_T start_read_pos_;
+    BUFSIZE_T start_write_pos_;
 
-    uint32_t incr_size;  // 增加缓存大小时，额外增加的大小
-    uint32_t data_size_;
-    uint32_t max_buffer_size_;
+    BUFSIZE_T incr_size;  // 增加缓存大小时，额外增加的大小
+    BUFSIZE_T data_size_;
+    BUFSIZE_T max_buffer_size_;
 
     int errno_;
 
@@ -148,7 +152,7 @@ public:
             return *this;
         }
         curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ + 1) % buff_.max_buffer_size_;
-        
+        std::cout << "curr_pos: " << curr_pos_ << " start: " << buff_.start_read_pos_ << " end: " << buff_.start_write_pos_<< std::endl;
         return *this;
     }
     // 后置++

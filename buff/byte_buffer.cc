@@ -52,13 +52,17 @@ int ByteBuffer::idle_size()
 int 
 ByteBuffer::resize(void)
 {
-    max_buffer_size_ = max_buffer_size_ * 2;
+    if (max_buffer_size_ <= 0) {
+        max_buffer_size_ = 1;
+    } else {
+        max_buffer_size_ = max_buffer_size_ * 2;
+    }
     ByteBuffer tmp_buf = *this;
     buffer_.reserve(max_buffer_size_);
     this->clear();
-    *this = tmp_buf;
+    // 将原先保存的数据重新拷贝到新缓存中
+    this->copy_to_buffer(tmp_buf, 0, tmp_buf.data_size());
     return max_buffer_size_;
-    
 }
 
 
@@ -88,16 +92,16 @@ ByteBuffer::end(void)
     return tmp.end();
 }
 
-int ByteBuffer::copy_data_to_buffer(const void *data, int size)
+BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
     while (this->idle_size() <= size) {
-        this->resize();
+        std::cout << "resize: " << this->resize() << std::endl;
     }
 
     int8_t *data_ptr = (int8_t*)data;
     int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以写
-    int remain = max_buffer_size_ - start_write_pos_;
+    BUFSIZE_T remain = max_buffer_size_ - start_write_pos_;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
         memcpy(ptr+start_write_pos_, data_ptr, size);
         this->next_write_pos(size);
@@ -114,7 +118,7 @@ int ByteBuffer::copy_data_to_buffer(const void *data, int size)
     return size;
 }
 
-int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
+BUFSIZE_T ByteBuffer::copy_to_buffer(ByteBuffer buf, BUFSIZE_T start, BUFSIZE_T size)
 {
     while (size >= this->idle_size()) {
         this->resize();
@@ -130,7 +134,7 @@ int ByteBuffer::copy_to_buffer(ByteBuffer buf, uint32_t start, uint32_t size)
     return size;
 }
 
-int ByteBuffer::copy_data_from_buffer(void *data, int size)
+BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
     if (this->data_size() < size) {
         errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
@@ -140,8 +144,8 @@ int ByteBuffer::copy_data_from_buffer(void *data, int size)
     int8_t *data_ptr = (int8_t*)data;
     int8_t *ptr = (int8_t*)buffer_.data();
     // 检查buff数组后面是否有连续的内存可以读
-    int end_point = start_read_pos_>start_write_pos_?max_buffer_size_:start_write_pos_;
-    int remain = end_point - start_read_pos_;
+    BUFSIZE_T end_point = start_read_pos_>start_write_pos_?max_buffer_size_:start_write_pos_;
+    BUFSIZE_T remain = end_point - start_read_pos_;
     if (remain >= size) {    // 有足够的空间，那直接拷贝
         memcpy(data_ptr, ptr + start_read_pos_, size);
         this->next_read_pos(size);
@@ -175,7 +179,7 @@ int ByteBuffer::read_int32(int32_t &val)
 
 int ByteBuffer::read_int64(int64_t &val)
 {
-    return this->copy_data_from_buffer(&val, sizeof(int64_t));
+    return this->copy_data_from_buffer(&val, sizeof(BUFSIZE_T));
 }
 
 // 字符串是以 ‘\0’ 结尾的
@@ -209,7 +213,7 @@ int ByteBuffer::read_string(string &str)
     return str_size - 1; // 计算字符串长度时，‘\0’ 不计入
 }
 
-int ByteBuffer::read_bytes(void *buf, int buf_size, bool match)
+BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == NULL) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
@@ -236,7 +240,7 @@ int ByteBuffer::write_int32(int32_t val)
 
 int ByteBuffer::write_int64(int64_t val)
 {
-    return this->copy_data_to_buffer(&val, sizeof(int64_t));
+    return this->copy_data_to_buffer(&val, sizeof(BUFSIZE_T));
 }
 
 int ByteBuffer::write_string(string str)
@@ -245,7 +249,7 @@ int ByteBuffer::write_string(string str)
     return this->copy_data_to_buffer(str.c_str(), str.length() + 1) -1;
 }
 
-int ByteBuffer::write_bytes(const void *buf, int buf_size, bool match)
+BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == NULL) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
@@ -300,7 +304,7 @@ int ByteBuffer::read_string_lock(string &str)
     return ret_size;
 }
 
-int ByteBuffer::read_bytes_lock(void *buf, int buf_size, bool match)
+BUFSIZE_T ByteBuffer::read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match)
 {
     lock_.lock();
     int ret_size = this->read_bytes(buf, buf_size, match);
@@ -351,7 +355,7 @@ int ByteBuffer::write_string_lock(string str)
 
     return ret_size;
 }
-int ByteBuffer::write_bytes_lock(const void *buf, int buf_size, bool match)
+BUFSIZE_T ByteBuffer::write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match)
 {
     lock_.lock();
     int ret_size = this->write_bytes(buf, buf_size, match);
@@ -381,7 +385,7 @@ int ByteBuffer::read_int32_ntoh(int32_t &val)
     return 0;
 }
 
-int ByteBuffer::write_int16_ntoh(const int16_t &val)
+int ByteBuffer::write_int16_hton(const int16_t &val)
 {
     int16_t tmp = val;
     tmp = htons(val);
@@ -390,10 +394,10 @@ int ByteBuffer::write_int16_ntoh(const int16_t &val)
     return ret;
 }
 
-int ByteBuffer::write_int32_ntoh(const int32_t &val)
+int ByteBuffer::write_int32_hton(const int32_t &val)
 {
     int32_t tmp = val;
-    tmp = htons(val);
+    tmp = htonl(val);
     int  ret = this->write_int32(tmp);
 
     return ret;

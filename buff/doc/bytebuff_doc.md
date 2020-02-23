@@ -14,3 +14,4 @@
     ```
     a 和 b 相同, a 和 b 内部的指针指向同一个位置，程序结束时会对同一
     个指针释放两次，从而报错double free or corruption (fasttop)
+2. 能分配的大小取决于vector的大小。
