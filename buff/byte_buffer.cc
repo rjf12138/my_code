@@ -50,18 +50,29 @@ int ByteBuffer::idle_size()
 }
 
 int 
-ByteBuffer::resize(void)
+ByteBuffer::resize(int min_size)
 {
-    if (max_buffer_size_ <= 0) {
-        max_buffer_size_ = 1;
-    } else {
-        max_buffer_size_ = max_buffer_size_ * 2;
+    BUFSIZE_T new_size = max_buffer_size_;
+    while (new_size <= min_size) {
+        if (new_size <= 0) {
+            new_size = 1;
+        } else {
+            new_size = new_size * 2;
+        }
     }
-    ByteBuffer tmp_buf = *this;
-    buffer_.reserve(max_buffer_size_);
+
+    BUFFTYPE_T tmp_buf;
+    for (auto iter = this->begin(); iter != this->end(); ++iter) {
+        tmp_buf.push_back(*iter);
+    }
+
+    buffer_.reserve(new_size);
+    max_buffer_size_ = new_size;
     this->clear();
-    // 将原先保存的数据重新拷贝到新缓存中
-    this->copy_to_buffer(tmp_buf, 0, tmp_buf.data_size());
+    for (auto iter = tmp_buf.begin(); iter != tmp_buf.end(); ++iter) {
+        this->write_int8(*iter);
+    }
+
     return max_buffer_size_;
 }
 
@@ -94,8 +105,13 @@ ByteBuffer::end(void)
 
 BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
-    while (this->idle_size() <= size) {
-        std::cout << "resize: " << this->resize() << std::endl;
+    if (data == nullptr) {
+        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        return -1;
+    }
+
+    if (this->idle_size() <= size) {
+        this->resize(this->data_size_ + size);
     }
 
     int8_t *data_ptr = (int8_t*)data;
@@ -113,29 +129,18 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
     }
 
     data_size_ += size; // 更新buff内的数据个数
-
     errno_ = BYTE_BUFF_SUCCESS;
-    return size;
-}
 
-BUFSIZE_T ByteBuffer::copy_to_buffer(ByteBuffer buf, BUFSIZE_T start, BUFSIZE_T size)
-{
-    while (size >= this->idle_size()) {
-        this->resize();
-    }
-
-    for (auto iter = buf.begin(); iter != buf.end(); ++iter) {
-        if (this->write_int8(*iter) == -1) {
-            return -1;
-        }
-    }
-
-    errno_ = BYTE_BUFF_SUCCESS;
     return size;
 }
 
 BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
+    if (data == nullptr) {
+        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        return -1;
+    }
+
     if (this->data_size() < size) {
         errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
         return -1;
@@ -143,6 +148,7 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 
     int8_t *data_ptr = (int8_t*)data;
     int8_t *ptr = (int8_t*)buffer_.data();
+ 
     // 检查buff数组后面是否有连续的内存可以读
     BUFSIZE_T end_point = start_read_pos_>start_write_pos_?max_buffer_size_:start_write_pos_;
     BUFSIZE_T remain = end_point - start_read_pos_;
@@ -215,7 +221,7 @@ int ByteBuffer::read_string(string &str)
 
 BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
-    if (buf == NULL) {
+    if (buf == nullptr) {
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
         return -1;
     }
@@ -459,12 +465,17 @@ ByteBuffer::get_err_msg(int err)
 //////////////////////// 重载操作符 /////////////////////////
 
 ByteBuffer 
-operator+(const ByteBuffer &lhs, const ByteBuffer &rhs)
+operator+(ByteBuffer &lhs, ByteBuffer &rhs)
 {
-    ByteBuffer out;
+    // +10 为了提高冗余；
+    ByteBuffer out(lhs.data_size() + rhs.data_size()+10);
 
-    out.copy_to_buffer(lhs, 0, lhs.data_size_);
-    out.copy_to_buffer(rhs, 0, rhs.data_size_);
+    for (auto iter = lhs.begin(); iter != lhs.end(); ++iter) {
+        out.write_int8(*iter);
+    }
+    for (auto iter = rhs.begin(); iter != rhs.end(); ++iter) {
+        out.write_int8(*iter);
+    }
 
     return out;
 }

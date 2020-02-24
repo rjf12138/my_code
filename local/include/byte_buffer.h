@@ -60,8 +60,8 @@ public:
     int data_size(void);
     int idle_size(void);
     int clear(void);
-    // 重新分配缓冲区大小(只能向上增长)
-    int resize(void);
+    // 重新分配缓冲区大小(只能向上增长),minsize表示重新分配缓冲区的下限
+    int resize(int min_size);
 
     // 获取错误码，只在错误发生后调用才有效
     int get_error(void);
@@ -75,7 +75,7 @@ public:
     ByteBuffer_Iterator end(void);
 
     // 重载操作符
-    friend ByteBuffer operator+(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    friend ByteBuffer operator+(ByteBuffer &lhs, ByteBuffer &rhs);
     friend bool operator==(ByteBuffer &lhs, ByteBuffer &rhs);
     friend bool operator!=(ByteBuffer &lhs, ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);
@@ -90,8 +90,6 @@ private:
     BUFSIZE_T copy_data_to_buffer(const void *data, BUFSIZE_T size);
     // 从bytebuff中拷贝data个字节到data中
     BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
-    // 拷贝从 start 起 size 个字节， start 是指从 start_read_pos_ 起的字节数
-    BUFSIZE_T copy_to_buffer(const ByteBuffer buf, BUFSIZE_T start, BUFSIZE_T size);
 
 private:
     BUFFTYPE_T buffer_; // 修改为shared_ptr<int8_t>指针来修改
@@ -152,7 +150,6 @@ public:
             return *this;
         }
         curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ + 1) % buff_.max_buffer_size_;
-        std::cout << "curr_pos: " << curr_pos_ << " start: " << buff_.start_read_pos_ << " end: " << buff_.start_write_pos_<< std::endl;
         return *this;
     }
     // 后置++
