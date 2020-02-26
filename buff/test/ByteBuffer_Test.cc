@@ -8,6 +8,7 @@ namespace my {
 namespace project {
 namespace {
 
+#define MUTITHREAD 1
 
 class ByteBuffer_Test : public ::testing::Test {
 protected:
@@ -45,37 +46,60 @@ public:
                 switch(type_) {
                     case 1:
                     {
-                        buff_.write_int8_lock(vec_int8_);
-                        // for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                        //     std::cout << *iter << " ";
-                        // }
-                        // std::cout << std::endl;
+                        if (MUTITHREAD)
+                            buff_.write_int8_lock(vec_int8_);
+                        else
+                            buff_.write_int8(vec_int8_);
                     }
                     break;
                     case 2:
                     {
-                        buff_.write_int16_lock(vec_int16_);
+                        if (MUTITHREAD)
+                            buff_.write_int16_lock(vec_int16_);
+                        else
+                            buff_.write_int16(vec_int16_);
                     }
                     break;
                     case 3:
                     {
-                        buff_.write_int32_lock(vec_int32_);
+                        if (MUTITHREAD)
+                            buff_.write_int32_lock(vec_int32_);
+                        else
+                        {
+                            buff_.write_int32(vec_int32_);
+                        }
+                        
                     }
                     break;
                     case 4:
                     {
-                        buff_.write_int64_lock(vec_int64_);
+                        if (MUTITHREAD)
+                            buff_.write_int64_lock(vec_int64_);
+                        else
+                        {
+                            buff_.write_int64(vec_int64_);
+                        }
+                        
                     }
                     break;
                     case 5:
                     {
-                        buff_.write_string_lock(vec_string_);
+                        if (MUTITHREAD)
+                            buff_.write_string_lock(vec_string_);
+                        else
+                        {
+                            buff_.write_string(vec_string_);
+                        }
+                            
                     }
                     break;
                     case 6:
                     {
-                        if (buff_.write_bytes_lock(&vec_bytes_, sizeof(vec_bytes_)) == -1) {
-                            std::cout << buff_.get_err_msg() << std::endl;
+                        if (MUTITHREAD)
+                            buff_.write_bytes_lock(&vec_bytes_, sizeof(vec_bytes_));
+                        else
+                        {
+                            buff_.write_bytes(&vec_bytes_, sizeof(vec_bytes_));
                         }
                     }
                     break;
@@ -193,81 +217,63 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
     // 读写8位数据
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_int8('a'), 1);
         ASSERT_EQ(buff.data_size(), 1);
-        ASSERT_EQ(buff.idle_size(), buff_size - 1);
         int8_t val_8;
         ASSERT_EQ(buff.read_int8(val_8), 1);
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_8, 'a');
     }
     // 读写16位数据
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_int16(6536), 2);
         ASSERT_EQ(buff.data_size(), 2);
-        ASSERT_EQ(buff.idle_size(), buff_size - 2);
         int16_t val_16;
         ASSERT_EQ(buff.read_int16(val_16), 2);
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_16, 6536);
     }
     // 读写32位数据
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_int32(655536), 4);
         ASSERT_EQ(buff.data_size(), 4);
-        ASSERT_EQ(buff.idle_size(), buff_size - 4);
         int32_t val_32;
         ASSERT_EQ(buff.read_int32(val_32), 4);
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_32, 655536);
     }
     // 读写64位数据
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_int64(65566536), 8);
         ASSERT_EQ(buff.data_size(), 8);
-        ASSERT_EQ(buff.idle_size(), buff_size - 8);
         int64_t val_64;
         ASSERT_EQ(buff.read_int64(val_64), 8);
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_64, 65566536);
     }
     // 读写字符串
     string str = "Hello, world";
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_string(str), str.length());
         ASSERT_EQ(buff.data_size(), str.length() + 1);
-        ASSERT_EQ(buff.idle_size(), buff_size - str.length() - 1);
         string val_str;
         EXPECT_EQ(buff.read_string(val_str), str.length());
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_str, str);
     }
 
     struct test_stru stru = {'b', 12345, "Nice to meet you", "hello"};
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(buff.write_bytes((void*)&stru, sizeof(stru)) , sizeof(stru));
         ASSERT_EQ(buff.data_size(), sizeof(stru));
-        ASSERT_EQ(buff.idle_size(), buff_size - sizeof(stru));
         struct test_stru val_stru;
         ASSERT_EQ(buff.read_bytes(&val_stru, sizeof(stru)), sizeof(stru));
         ASSERT_EQ(buff.data_size(), 0);
-        ASSERT_EQ(buff.idle_size(), buff_size);
         ASSERT_EQ(val_stru.i8, stru.i8);
         ASSERT_EQ(val_stru.i16, stru.i16);
         ASSERT_EQ(strcmp(val_stru.str, stru.str), 0);
@@ -285,15 +291,11 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         for (BUFSIZE_T j = 0; j < n / 2; ++j) {
             buff.write_int8('a');
         }
-        ASSERT_EQ(buff.data_size() + buff.idle_size(), n);
         ASSERT_EQ(buff.data_size(), n / 2);
-        ASSERT_EQ(buff.idle_size(), n / 2);
         int8_t out;
         for (BUFSIZE_T j = 0; j < n / 2; ++j) {
             buff.read_int8(out);
-            ASSERT_EQ(buff.data_size() + buff.idle_size(), n);
             ASSERT_EQ(buff.data_size(), n / 2 - j - 1);
-            ASSERT_EQ(buff.idle_size(), n / 2 + j + 1);
         }
 
         ASSERT_EQ(buff.empty(), true);
@@ -301,15 +303,13 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     }
 }
 
-// #define TEST_THREAD_NUM 1000
-// #define TEST_COUNT 1000000
+#define TEST_THREAD_NUM 1000
+#define TEST_COUNT 8000
 
 TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 {
     ByteBuffer buff(0);
-    int TEST_THREAD_NUM = rand() % 1000;
-    int TEST_COUNT = rand() % 1000000;
-    std::cout << "count: " << TEST_THREAD_NUM*TEST_COUNT<< std::endl;
+
     vector<TestWriteThread> test;
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test.push_back(TestWriteThread(buff, TEST_COUNT, TEST_THREAD_NUM));
@@ -321,6 +321,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
+    
     ASSERT_EQ(test[0].test_write_data(), true);
 
     buff.clear();
@@ -331,6 +332,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
+    
     ASSERT_EQ(test[0].test_write_data(), true);
 
     buff.clear();
@@ -341,6 +343,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
+    
     ASSERT_EQ(test[0].test_write_data(), true);
 
     buff.clear();
@@ -351,6 +354,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
+    
     ASSERT_EQ(test[0].test_write_data(), true);
 
     buff.clear();
@@ -361,6 +365,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
+    
     ASSERT_EQ(test[0].test_write_data(), true);
 
     buff.clear();
@@ -368,6 +373,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].set_type(6);
         test[i].init();
     }
+    
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].wait_thread();
     }
@@ -375,6 +381,22 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 
 }
 
+TEST_F(ByteBuffer_Test, boundary_test)
+{
+    ByteBuffer buff(-2);
+    ASSERT_EQ(buff.data_size(), 0);
+    ASSERT_EQ(buff.empty(), true);
+    ASSERT_GE(buff.idle_size(), 1);
+
+    test_stru test;
+    buff.write_bytes((void*)&test, sizeof(test));
+    ASSERT_EQ(buff.data_size(), sizeof(test));
+    ASSERT_EQ(buff.empty(), false);
+    
+    buff.clear();
+    ASSERT_EQ(buff.data_size(), 0);
+    ASSERT_EQ(buff.empty(), true);
+}
 }  // namespace
 }  // namespace project
 }  // namespace my

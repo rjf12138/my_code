@@ -2,12 +2,11 @@
 
 namespace my_util {
 
-ByteBuffer::ByteBuffer(int max_buffer_size)
+ByteBuffer::ByteBuffer(BUFSIZE_T max_buffer_size)
 {
-    incr_size = 100;
     max_buffer_size_ = max_buffer_size;
-    buffer_.reserve(max_buffer_size_);
     this->clear();
+    this->resize(max_buffer_size);
 }
 
 ByteBuffer::~ByteBuffer()
@@ -50,7 +49,7 @@ int ByteBuffer::idle_size()
 }
 
 int 
-ByteBuffer::resize(int min_size)
+ByteBuffer::resize(BUFSIZE_T min_size)
 {
     BUFSIZE_T new_size = max_buffer_size_;
     while (new_size <= min_size) {
@@ -68,9 +67,6 @@ ByteBuffer::resize(int min_size)
 
     buffer_.reserve(new_size);
     max_buffer_size_ = buffer_.capacity();
-    if (max_buffer_size_ <= min_size) {
-        return -1;
-    }
     this->clear();
     for (auto iter = tmp_buf.begin(); iter != tmp_buf.end(); ++iter) {
         this->write_int8(*iter);
@@ -84,12 +80,6 @@ bool ByteBuffer::empty(void)
 {
     errno_ = BYTE_BUFF_SUCCESS;
     return this->data_size() == 0 ? true : false;
-}
-
-bool ByteBuffer::full(void)
-{
-    errno_ = BYTE_BUFF_SUCCESS;
-    return this->idle_size() == 0 ? true : false;
 }
 
 ByteBuffer_Iterator
@@ -114,10 +104,7 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
     }
 
     if (this->idle_size() <= size) {
-       if (this->resize(this->data_size_ + size) == -1) {
-           errno_ = BYTE_BUFF_RUN_OUT_OF_MEMORY;
-           return -1;
-       }
+       this->resize(max_buffer_size_ + size);
     }
 
     int8_t *data_ptr = (int8_t*)data;
@@ -537,7 +524,6 @@ ByteBuffer::operator=(const ByteBuffer& src)
     lock_ = src.lock_;
     start_read_pos_ = src.start_read_pos_;
     start_write_pos_ = src.start_write_pos_;
-    incr_size = src.incr_size;
     data_size_ = src.data_size_;
     max_buffer_size_ = src.max_buffer_size_;
     errno_ = src.errno_;

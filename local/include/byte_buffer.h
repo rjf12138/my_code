@@ -16,7 +16,7 @@ class ByteBuffer_Iterator;
 class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
-    ByteBuffer(int max_buffer_size = 2);
+    ByteBuffer(BUFSIZE_T max_buffer_size = 2);
     virtual ~ByteBuffer();
 
     int read_int8(int8_t &val);
@@ -56,12 +56,11 @@ public:
     int write_int32_hton(const int32_t &val);
 
     bool empty(void);
-    bool full(void);
     int data_size(void);
     int idle_size(void);
     int clear(void);
     // 重新分配缓冲区大小(只能向上增长),minsize表示重新分配缓冲区的下限
-    int resize(int min_size);
+    int resize(BUFSIZE_T min_size);
 
     // 获取错误码，只在错误发生后调用才有效
     int get_error(void);
@@ -98,7 +97,6 @@ private:
     BUFSIZE_T start_read_pos_;
     BUFSIZE_T start_write_pos_;
 
-    BUFSIZE_T incr_size;  // 增加缓存大小时，额外增加的大小
     BUFSIZE_T data_size_;
     BUFSIZE_T max_buffer_size_;
 
