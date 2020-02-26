@@ -67,7 +67,10 @@ ByteBuffer::resize(int min_size)
     }
 
     buffer_.reserve(new_size);
-    max_buffer_size_ = new_size;
+    max_buffer_size_ = buffer_.capacity();
+    if (max_buffer_size_ <= min_size) {
+        return -1;
+    }
     this->clear();
     for (auto iter = tmp_buf.begin(); iter != tmp_buf.end(); ++iter) {
         this->write_int8(*iter);
@@ -111,7 +114,10 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
     }
 
     if (this->idle_size() <= size) {
-        this->resize(this->data_size_ + size);
+       if (this->resize(this->data_size_ + size) == -1) {
+           errno_ = BYTE_BUFF_RUN_OUT_OF_MEMORY;
+           return -1;
+       }
     }
 
     int8_t *data_ptr = (int8_t*)data;
@@ -140,7 +146,7 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
         errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
         return -1;
     }
-
+   
     if (this->data_size() < size) {
         errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
         return -1;
@@ -435,12 +441,6 @@ ByteBuffer::get_err_msg(int err)
         case BYTE_BUFF_FULL:
             error_msg = STR_BYTE_BUFF_FULL;
             break;
-        case BYTE_BUFF_COPY_DATA_FROM_BUFFER_FAILED:
-            error_msg = STR_BYTE_BUFF_COPY_DATA_FROM_BUFFER_FAILED;
-            break;
-        case BYTE_BUFF_COPY_DATA_TO_BUFFER_FAILED:
-            error_msg = STR_BYTE_BUFF_COPY_DATA_TO_BUFFER_FAILED;
-            break;
         case BYTE_BUFF_STR_READ_FAILED:
             error_msg = STR_BYTE_BUFF_STR_READ_FAILED;
             break;
@@ -455,6 +455,8 @@ ByteBuffer::get_err_msg(int err)
             break;
         case BYTE_BUFF_CANT_FIND_STRING:
             error_msg = STR_BYTE_BUFF_CANT_FIND_STRING;
+        case BYTE_BUFF_RUN_OUT_OF_MEMORY:
+            error_msg = STR_BYTE_RUN_OUT_OF_MEMORY;
         default:
             error_msg = STR_UNKNOWN_ERROR;
     }

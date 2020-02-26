@@ -17,11 +17,13 @@ Thread::create_func(void* arg)
 int 
 Thread::init(void)
 {
+    this->start_handler();
     return pthread_create(&thread_id_, NULL, create_func, (void*)this);
 }
 
 int Thread::run_handler(void) { }
-int Thread::exit_handler(void) { }
+int Thread::stop_handler(void) { }
+int Thread::start_handler(void) { }
 
 int Thread::wait_thread(void)
 {

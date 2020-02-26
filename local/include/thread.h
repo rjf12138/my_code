@@ -13,7 +13,8 @@ public:
 
     virtual int init(void);
     virtual int run_handler(void);
-    virtual int exit_handler(void);
+    virtual int stop_handler(void);
+    virtual int start_handler(void);
     virtual int wait_thread(void);
 
 private:

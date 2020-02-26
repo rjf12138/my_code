@@ -41,58 +41,42 @@ public:
 
     int run_handler(void) {
         while (exit_ != true) {
-            std::cerr << "while :" << test_cnt_ << std::endl;
             for (int i = 0; i < test_cnt_; ++i) {
-                std::cerr << "i: " << i << std::endl;
                 switch(type_) {
                     case 1:
                     {
                         buff_.write_int8_lock(vec_int8_);
-                        for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                            std::cout << *iter << " ";
-                        }
-                        std::cout << std::endl;
+                        // for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
+                        //     std::cout << *iter << " ";
+                        // }
+                        // std::cout << std::endl;
                     }
                     break;
                     case 2:
                     {
                         buff_.write_int16_lock(vec_int16_);
-                        for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                            std::cout << *iter << " ";
-                        }
-                        std::cout << std::endl;
                     }
                     break;
                     case 3:
                     {
                         buff_.write_int32_lock(vec_int32_);
-                        for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                            std::cout << *iter << " ";
-                        }
-                        std::cout << std::endl;
                     }
                     break;
                     case 4:
                     {
                         buff_.write_int64_lock(vec_int64_);
-                        for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                            std::cout << *iter << " ";
-                        }
-                        std::cout << std::endl;
                     }
                     break;
                     case 5:
                     {
                         buff_.write_string_lock(vec_string_);
-                        for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                            std::cout << *iter << " ";
-                        }
-                        std::cout << std::endl;
                     }
                     break;
                     case 6:
                     {
-                        buff_.write_bytes_lock(&vec_bytes_, sizeof(vec_bytes_));
+                        if (buff_.write_bytes_lock(&vec_bytes_, sizeof(vec_bytes_)) == -1) {
+                            std::cout << buff_.get_err_msg() << std::endl;
+                        }
                     }
                     break;
                     default: {
@@ -101,29 +85,17 @@ public:
                 }
             }
             
-            this->exit_handler();
+            this->stop_handler();
         }
     }
     bool test_write_data(void) {
-        std::cerr << "--------------" << test_cnt_ * thread_cnt_ << std::endl;
         for (int i = 0; i < test_cnt_ * thread_cnt_; ++i) {
-            std::cerr << "------------" << i << " " << type_<< std::endl;
             switch(type_) {
                 case 1:
                 {
-                    std::cout << "==============" << i << std::endl;
                     int8_t tmp_val = 0;
-                    std::cout << "size-1: " << buff_.data_size() << std::endl;
-                    for (auto iter = buff_.begin(); iter != buff_.end(); ++iter) {
-                        std::cout << *iter << " ";
-                    }
-                    std::cout << std::endl;
                     buff_.read_int8_lock(tmp_val);
-                    std::cout << "size-2: " << buff_.data_size() << std::endl;
-                    std::cout << "=============+" << i << std::endl;
-                    std::cout << "-----====" << (int)tmp_val << std::endl;
                     if (tmp_val != vec_int8_) {
-                        std::cout << "--------++++++ " << (int)tmp_val << std::endl;
                         return false;
                     }
                 }
@@ -191,8 +163,11 @@ public:
         return true;
     }
 
-    int exit_handler(void) {
+    int stop_handler(void) {
         exit_ = true;
+    }
+    int start_handler(void) {
+        exit_ = false;
     }
 
 private:
@@ -326,12 +301,15 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     }
 }
 
-#define TEST_THREAD_NUM 1
-#define TEST_COUNT 10
+// #define TEST_THREAD_NUM 1000
+// #define TEST_COUNT 1000000
 
 TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 {
     ByteBuffer buff(0);
+    int TEST_THREAD_NUM = rand() % 1000;
+    int TEST_COUNT = rand() % 1000000;
+    std::cout << "count: " << TEST_THREAD_NUM*TEST_COUNT<< std::endl;
     vector<TestWriteThread> test;
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test.push_back(TestWriteThread(buff, TEST_COUNT, TEST_THREAD_NUM));
@@ -344,7 +322,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test int8_t over" << std::endl;
+
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].set_type(2);
@@ -354,7 +332,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test int16_t over" << std::endl;
+
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].set_type(3);
@@ -364,7 +342,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test int32_t over" << std::endl;
+
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].set_type(4);
@@ -374,7 +352,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test int64_t over" << std::endl;
+
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].set_type(5);
@@ -384,7 +362,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test string over" << std::endl;
+
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
         test[i].set_type(6);
@@ -394,7 +372,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
         test[i].wait_thread();
     }
     ASSERT_EQ(test[0].test_write_data(), true);
-    std::cerr << "test struc over" << std::endl;
+
 }
 
 }  // namespace
