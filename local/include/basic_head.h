@@ -31,6 +31,6 @@ using namespace std;
 
 ////////////// defined by myself ////////////////////////
 
-#include "error.h"
+#include "error_def.h"
 
 #endif

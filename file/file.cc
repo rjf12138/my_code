@@ -1,4 +1,6 @@
-#include "inc/file.h"
+#include "file.h"
+
+namespace my_util {
 
 FileOperate::FileOperate(void) :file_open_flag_(false)
 { }
@@ -115,7 +117,7 @@ FileOperate::curr_pos(void)
 }
 
 ssize_t 
-FileOperate::read(Buffer &buff, size_t buf_size)
+FileOperate::read(ByteBuffer &buff, size_t buf_size)
 {
     if (!file_open_flag_) {
         return -1;
@@ -133,7 +135,7 @@ FileOperate::read(Buffer &buff, size_t buf_size)
 }
 
 ssize_t 
-FileOperate::read_from_pos(Buffer &buff, size_t buf_size, off_t pos, int whence)
+FileOperate::read_from_pos(ByteBuffer &buff, size_t buf_size, off_t pos, int whence)
 {
     if (!file_open_flag_) {
         return -1;
@@ -149,7 +151,7 @@ FileOperate::read_from_pos(Buffer &buff, size_t buf_size, off_t pos, int whence)
 
 
 ssize_t 
-FileOperate::write(Buffer buff, size_t buf_size)
+FileOperate::write(ByteBuffer buff, size_t buf_size)
 {
     if (!file_open_flag_) {
         return -1;
@@ -167,7 +169,7 @@ FileOperate::write(Buffer buff, size_t buf_size)
 }
 
 ssize_t 
-FileOperate::write_to_pos(Buffer buff, size_t buf_size ,off_t pos, int whence)
+FileOperate::write_to_pos(ByteBuffer buff, size_t buf_size ,off_t pos, int whence)
 {
     if (!file_open_flag_) {
         return -1;
@@ -182,7 +184,7 @@ FileOperate::write_to_pos(Buffer buff, size_t buf_size ,off_t pos, int whence)
 }
 
 ssize_t 
-FileOperate::read_from_stdin(Buffer &buff)
+FileOperate::read_from_stdin(ByteBuffer &buff)
 {
     const int buf_size = 256;
     int8_t buf[buf_size] = {0};
@@ -196,7 +198,7 @@ FileOperate::read_from_stdin(Buffer &buff)
 }
 
 ssize_t 
-FileOperate::write_to_stdout(Buffer buff, size_t buf_size)
+FileOperate::write_to_stdout(ByteBuffer buff, size_t buf_size)
 {
     const int tmp_buf_size = buff.data_size;
     int8_t buf[tmp_buf_size] = {0};
@@ -210,7 +212,7 @@ FileOperate::write_to_stdout(Buffer buff, size_t buf_size)
 }
 
 ssize_t 
-FileOperate::write_to_stderr(Buffer buff, size_t buf_size)
+FileOperate::write_to_stderr(ByteBuffer buff, size_t buf_size)
 {
     const int tmp_buf_size = buff.data_size;
     int8_t buf[tmp_buf_size] = {0};
@@ -221,4 +223,6 @@ FileOperate::write_to_stderr(Buffer buff, size_t buf_size)
     }
 
     return ret;
+}
+
 }
