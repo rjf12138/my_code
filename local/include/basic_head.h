@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <cstdarg>
 #include <map>
 #include <memory>
 #include <queue>
@@ -30,7 +31,5 @@ using namespace std;
 #include <sys/wait.h>
 
 ////////////// defined by myself ////////////////////////
-
-#include "error_def.h"
 
 #endif

@@ -9,6 +9,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "optional:-std=c++11")   
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
+add_subdirectory(./error_handler)
 add_subdirectory(./thread)
 add_subdirectory(./buff)
 add_subdirectory(./buff/test)

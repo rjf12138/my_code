@@ -16,7 +16,7 @@ ByteBuffer::~ByteBuffer()
 
 int ByteBuffer::clear(void)
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     data_size_ = 0;
     start_read_pos_ = 0;
     start_write_pos_ = 0;
@@ -26,25 +26,25 @@ int ByteBuffer::clear(void)
 
 void ByteBuffer::next_read_pos(int offset)
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
 }
 
 void ByteBuffer::next_write_pos(int offset)
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     start_write_pos_ = (start_write_pos_ + offset) % max_buffer_size_;
 }
 
 int ByteBuffer::data_size(void)
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     return data_size_;
 }
 
 int ByteBuffer::idle_size()
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     return (max_buffer_size_ - data_size_);
 }
 
@@ -78,7 +78,7 @@ ByteBuffer::resize(BUFSIZE_T min_size)
 
 bool ByteBuffer::empty(void)
 {
-    errno_ = BYTE_BUFF_SUCCESS;
+    
     return this->data_size() == 0 ? true : false;
 }
 
@@ -99,7 +99,7 @@ ByteBuffer::end(void)
 BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
     if (data == nullptr) {
-        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        err_msg("output buffer(data) is null!");
         return -1;
     }
 
@@ -122,7 +122,7 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
     }
 
     data_size_ += size; // 更新buff内的数据个数
-    errno_ = BYTE_BUFF_SUCCESS;
+    
 
     return size;
 }
@@ -130,12 +130,12 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
     if (data == nullptr) {
-        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        err_msg("output buffer(data) is null!");
         return -1;
     }
    
     if (this->data_size() < size) {
-        errno_ = BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
+        err_msg("ByteBuffer remain data(%d) is less than size(%d)!", this->data_size(), size);
         return -1;
     }
 
@@ -155,7 +155,6 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
         this->next_read_pos(size - remain); // 从buff开头在将剩余的数据读取
     }
 
-    errno_ = BYTE_BUFF_SUCCESS;
     data_size_ -= size; // 更新buff内的数据个数
     return size;
 }
@@ -185,7 +184,7 @@ int ByteBuffer::read_int64(int64_t &val)
 int ByteBuffer::read_string(string &str)
 {
     if (this->empty()) {
-        errno_ = BYTE_BUFF_EMPTY;
+        err_msg("ByteBuffer is empty!");
         return -1;
     }
 
@@ -199,7 +198,7 @@ int ByteBuffer::read_string(string &str)
         }
     }
     if (iter == this->end()) {
-        errno_ = BYTE_BUFF_CANT_FIND_STRING;
+        err_msg("ByteBuffer don't have any string!");
         return -1;
     }
 
@@ -215,7 +214,7 @@ int ByteBuffer::read_string(string &str)
 BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == nullptr) {
-        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        err_msg("output buffer(data) is null!");
         return -1;
     }
 
@@ -251,7 +250,7 @@ int ByteBuffer::write_string(string str)
 BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == NULL) {
-        errno_ = BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
+        err_msg("output buffer(data) is null!");
         return -1;
     }
 
@@ -402,55 +401,6 @@ int ByteBuffer::write_int32_hton(const int32_t &val)
     return ret;
 }
 
-int 
-ByteBuffer::get_error(void)
-{
-    return errno_;
-}
-
-string 
-ByteBuffer::get_err_msg(void)
-{
-    return this->get_err_msg(errno_);
-}
-
-string 
-ByteBuffer::get_err_msg(int err)
-{
-    string error_msg;
-    switch(errno_) {
-        case BYTE_BUFF_SUCCESS: 
-            error_msg = STR_BYTE_BUFF_SUCCESS;
-            break;
-        case BYTE_BUFF_EMPTY:
-            error_msg = STR_BYTE_BUFF_EMPTY;
-            break;
-        case BYTE_BUFF_FULL:
-            error_msg = STR_BYTE_BUFF_FULL;
-            break;
-        case BYTE_BUFF_STR_READ_FAILED:
-            error_msg = STR_BYTE_BUFF_STR_READ_FAILED;
-            break;
-        case BYTE_BUFF_OUTPUT_BUFFER_IS_NULL:
-            error_msg = STR_BYTE_BUFF_OUTPUT_BUFFER_IS_NULL;
-            break;
-        case BYTE_BUFF_OUT_OF_RANGE:
-            error_msg = STR_BYTE_BUFF_OUT_OF_RANGE;
-            break;
-        case BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH:
-            error_msg = STR_BYTE_BUFF_REMAIN_DATA_NOT_ENOUGH;
-            break;
-        case BYTE_BUFF_CANT_FIND_STRING:
-            error_msg = STR_BYTE_BUFF_CANT_FIND_STRING;
-        case BYTE_BUFF_RUN_OUT_OF_MEMORY:
-            error_msg = STR_BYTE_RUN_OUT_OF_MEMORY;
-        default:
-            error_msg = STR_UNKNOWN_ERROR;
-    }
-
-    return error_msg;
-}
-
 //////////////////////// 重载操作符 /////////////////////////
 
 ByteBuffer 
@@ -526,7 +476,6 @@ ByteBuffer::operator=(const ByteBuffer& src)
     start_write_pos_ = src.start_write_pos_;
     data_size_ = src.data_size_;
     max_buffer_size_ = src.max_buffer_size_;
-    errno_ = src.errno_;
 
     return *this;
 }
