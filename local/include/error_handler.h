@@ -31,10 +31,10 @@ public:
     virtual ~ErrorHandler(void);
 
     // err_type 分为系统的错误和我们自己定义的错误
-    virtual int input_err_info(int occur_line, string occur_file, const char *format, ...);
+    static int input_err_info(int occur_line, string occur_file, const char *format, ...);
     // output_to:   选择输出位置可以是屏幕或是以后的日志系统
     // output_type: 可以选择有错误时立即输出，或是等到朝过overflow_size设定值在全部输出
-    virtual int set_err_output(int output_to = ERROR_TO_STDERR, 
+    int set_err_output(int output_to = ERROR_TO_STDERR, 
                 int output_type = ERROR_OUTPUT_IMMEDIATELY, int overflow_size = 0);
     
     static int input_static_err_info(ErrorHandler err_handle, int occur_line, string occur_file, const char *format, ...);
@@ -55,8 +55,8 @@ private:
     static ERR_OBJECT_ID static_func_err_id_;
 };
 
-#define err_msg(...)        this->input_err_info(__LINE__, __FILE__, __VA_ARGS__)
-#define err_msg_static(...) ErrorHandler::input_static_err_info(ErrorHandler(), __LINE__, __FILE__, __VA_ARGS__)
+#define err_msg(...)        ErrorHandler::input_err_info(__LINE__, __FILE__, __VA_ARGS__)
+#define err_msg_static(...) ErrorHandler::input_err_info(__LINE__, __FILE__, __VA_ARGS__)
 
 }
 

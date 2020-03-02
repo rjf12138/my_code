@@ -3,13 +3,12 @@
 
 #include "basic_head.h"
 #include "byte_buffer.h"
-#include "error_handle.h"
 
 namespace my_util {
 #define DEFAULT_OPEN_FLAG   O_RDWR
 #define DEFAULT_FILE_RIGHT  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 
-class FileOperate : public ErrorHandler {
+class FileOperate {
 public:
     FileOperate(void);
     ~FileOperate(void);

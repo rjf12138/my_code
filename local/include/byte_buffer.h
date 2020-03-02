@@ -3,7 +3,6 @@
 
 #include "basic_head.h"
 #include "mutex.h"
-#include "error_handler.h"
 
 #define MAX_STRING_SIZE     512
 #define MAX_BUFFER_SIZE     1*1024*1024*1024
@@ -14,7 +13,7 @@ typedef int64_t BUFSIZE_T;
 typedef vector<int8_t> BUFFTYPE_T;
 
 class ByteBuffer_Iterator;
-class ByteBuffer : public ErrorHandler {
+class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
     ByteBuffer(BUFSIZE_T max_buffer_size = 2);

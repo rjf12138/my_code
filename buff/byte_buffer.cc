@@ -99,10 +99,10 @@ ByteBuffer::end(void)
 BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
     if (data == nullptr) {
-        err_msg("output buffer(data) is null!");
+        fprintf(stderr, "output buffer(data) is null!");
         return -1;
     }
-
+    
     if (this->idle_size() <= size) {
        this->resize(max_buffer_size_ + size);
     }
@@ -130,12 +130,12 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
     if (data == nullptr) {
-        err_msg("output buffer(data) is null!");
+        fprintf(stderr, "output buffer(data) is null!");
         return -1;
     }
    
     if (this->data_size() < size) {
-        err_msg("ByteBuffer remain data(%d) is less than size(%d)!", this->data_size(), size);
+        fprintf(stderr, "ByteBuffer remain data(%d) is less than size(%ld)!", this->data_size(), size);
         return -1;
     }
 
@@ -184,7 +184,7 @@ int ByteBuffer::read_int64(int64_t &val)
 int ByteBuffer::read_string(string &str)
 {
     if (this->empty()) {
-        err_msg("ByteBuffer is empty!");
+        fprintf(stderr, "ByteBuffer is empty!");
         return -1;
     }
 
@@ -198,7 +198,7 @@ int ByteBuffer::read_string(string &str)
         }
     }
     if (iter == this->end()) {
-        err_msg("ByteBuffer don't have any string!");
+        fprintf(stderr, "ByteBuffer don't have any string!");
         return -1;
     }
 
@@ -214,7 +214,7 @@ int ByteBuffer::read_string(string &str)
 BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == nullptr) {
-        err_msg("output buffer(data) is null!");
+        fprintf(stderr, "output buffer(data) is null!");
         return -1;
     }
 
@@ -250,7 +250,7 @@ int ByteBuffer::write_string(string str)
 BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == NULL) {
-        err_msg("output buffer(data) is null!");
+        fprintf(stderr, "output buffer(data) is null!");
         return -1;
     }
 

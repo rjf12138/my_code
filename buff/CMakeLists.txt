@@ -7,4 +7,3 @@ set(BYTE_BUFF byte_buffer.cc)
 add_library(buffer ${BYTE_BUFF})
 
 target_link_libraries(buffer thread)
-target_link_libraries(buffer error)

@@ -6,6 +6,7 @@
 
 namespace my_util
 {
+#define MAX_QUEUE_SIZE 500000
 
 template<class T>
 class Queue{
@@ -27,12 +28,14 @@ private:
 template<class T>
 Queue<T>::Queue(void)
 {
+    max_queue_size_ = MAX_QUEUE_SIZE;
+    current_size_ = 0;
 }
 
 template<class T>
 Queue<T>::~Queue()
 {
- 
+    
 }
 
 template<class T>

@@ -13,8 +13,8 @@ FileOperate::~FileOperate(void)
 int 
 FileOperate::open(const string file_path, int flag, int file_right)
 {
-    if (file_path.empty) {
-        err_msg("file_path is empty");
+    if (file_path.empty()) {
+        fprintf(stderr, "file_path is empty");
         return -1;
     }
 
@@ -28,7 +28,7 @@ FileOperate::open(const string file_path, int flag, int file_right)
     }
 
     if (fd == -1) {
-        err_msg("open: ", strerror(errno));
+        fprintf(stderr, "open: %s\n", strerror(errno));
         return -1;
     }
     // 获取文件信息
@@ -36,7 +36,7 @@ FileOperate::open(const string file_path, int flag, int file_right)
     ret = ::stat(file_path.c_str(), &info);
     if (ret == -1)
     {
-        err_msg("stat: %s", strerror(errno));
+        fprintf(stderr, "stat: %s\n", strerror(errno));
         return -1;
     }
 
@@ -62,7 +62,7 @@ FileOperate::set_fd(int fd, bool open_on_exit)
     int ret = ::fstat(fd_, &file_info_);
     if (ret == -1) {
         file_open_flag_ = false;
-        err_msg(strerror(errno));
+        fprintf(stderr, "fstat: %s", strerror(errno));
         return -1;
     }
     open_on_exit_ = open_on_exit;
@@ -76,7 +76,7 @@ FileOperate::fileinfo(struct stat &file_info)
     if (file_open_flag_ == true) {
         file_info = file_info_;
     } else {
-        err_msg("haven't open any file.");
+        fprintf(stderr, "haven't open any file.\n");
         return -1;
     }
 
@@ -98,7 +98,7 @@ FileOperate::check_fd(int fd)
     struct stat info;
     int ret = fstat(fd, &info);
     if (ret == -1) {
-        err_msg("fstat: %s", strerror(errno));
+        fprintf(stderr, "fstat: %s\n", strerror(errno));
         return -1;
     }
 
@@ -110,7 +110,7 @@ FileOperate::seek(off_t offset, int whence)
 {
     off_t pos = lseek(fd_, offset, whence);
     if (pos == -1) {
-        err_msg("lseek: %s", strerror(errno));
+        fprintf(stderr, "lseek: %s\n", strerror(errno));
         return -1;
     }
 
@@ -127,7 +127,7 @@ ssize_t
 FileOperate::read(ByteBuffer &buff, size_t buf_size)
 {
     if (!file_open_flag_) {
-        err_msg("FileOperate::read: haven't open any file!");
+        fprintf(stderr, "FileOperate::read: haven't open any file!\n");
         return -1;
     }
 
@@ -135,7 +135,7 @@ FileOperate::read(ByteBuffer &buff, size_t buf_size)
     int8_t buf[tmp_buf_size] = {0};
     ssize_t ret = ::read(fd_, buf, tmp_buf_size);
     if (ret == -1) {
-        err_msg("read: %s", strerror(errno));
+        fprintf(stderr, "read: %s\n", strerror(errno));
         return ret;
     }
 
@@ -147,12 +147,12 @@ ssize_t
 FileOperate::read_from_pos(ByteBuffer &buff, size_t buf_size, off_t pos, int whence)
 {
     if (!file_open_flag_) {
-        err_msg("read_from_pos: haven't open any file!");
+        fprintf(stderr, "read_from_pos: haven't open any file!\n");
         return -1;
     }
 
     if (this->seek(pos, whence) == -1) {
-        err_msg("seek: %s!", strerror(errno));
+        fprintf(stderr, "seek: %s!\n", strerror(errno));
         return -1;
     }
 
@@ -165,16 +165,16 @@ ssize_t
 FileOperate::write(ByteBuffer buff, size_t buf_size)
 {
     if (!file_open_flag_) {
-        err_msg("write: haven't open any file!");
+        fprintf(stderr, "write: haven't open any file!\n");
         return -1;
     }
 
-    const int tmp_buf_size = buff.data_size;
+    const int tmp_buf_size = buff.data_size();
     int8_t buf[tmp_buf_size] = {0};
     buff.read_bytes(buf, tmp_buf_size);
     ssize_t ret = ::write(fd_, buf, tmp_buf_size);
     if (ret == -1) {
-        err_msg("write: %s!", strerror(errno));
+        fprintf(stderr, "write: %s!\n", strerror(errno));
         return -1;
     }
 
@@ -185,12 +185,12 @@ ssize_t
 FileOperate::write_to_pos(ByteBuffer buff, size_t buf_size ,off_t pos, int whence)
 {
     if (!file_open_flag_) {
-        err_msg("write_to_pos: haven't open any file!");
+        fprintf(stderr, "write_to_pos: haven't open any file!\n");
         return -1;
     }
 
     if (this->seek(pos, whence) == -1) {
-        err_msg("seek: %s!", strerror(errno));
+        fprintf(stderr, "seek: %s!\n", strerror(errno));
         return -1;
     }
 
@@ -205,7 +205,7 @@ FileOperate::read_from_stdin(ByteBuffer &buff)
     int8_t buf[buf_size] = {0};
     ssize_t ret = ::read(STDIN_FILENO, buf, buf_size);
     if (ret == -1) {
-        err_msg_static("read: %s!", strerror(errno));
+        fprintf(stderr, "read: %s!\n", strerror(errno));
         return ret;
     }
 
@@ -216,12 +216,12 @@ FileOperate::read_from_stdin(ByteBuffer &buff)
 ssize_t 
 FileOperate::write_to_stdout(ByteBuffer buff, size_t buf_size)
 {
-    const int tmp_buf_size = buff.data_size;
+    const int tmp_buf_size = buff.data_size();
     int8_t buf[tmp_buf_size] = {0};
     buff.read_bytes(buf, tmp_buf_size);
     ssize_t ret = ::write(STDOUT_FILENO, buf, tmp_buf_size);
     if (ret == -1) {
-        err_msg_static("write: %s!", strerror(errno));
+        fprintf(stderr, "write: %s!\n", strerror(errno));
         return -1;
     }
     
@@ -231,12 +231,12 @@ FileOperate::write_to_stdout(ByteBuffer buff, size_t buf_size)
 ssize_t 
 FileOperate::write_to_stderr(ByteBuffer buff, size_t buf_size)
 {
-    const int tmp_buf_size = buff.data_size;
+    const int tmp_buf_size = buff.data_size();
     int8_t buf[tmp_buf_size] = {0};
     buff.read_bytes(buf, tmp_buf_size);
     ssize_t ret = ::write(STDERR_FILENO, buf, tmp_buf_size);
     if (ret == -1) {
-        err_msg_static("write: %s!", strerror(errno));
+        fprintf(stderr, "write: %s!\n", strerror(errno));
         return -1;
     }
 

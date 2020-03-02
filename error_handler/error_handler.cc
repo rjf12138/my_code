@@ -2,7 +2,7 @@
 
 namespace my_util {
 
-map<ERR_OBJECT_ID, Queue<string>> ErrorHandler::obj_map_;
+map<ERR_OBJECT_ID, Queue<string>> ErrorHandler::obj_map_ = map<ERR_OBJECT_ID, Queue<string>>();
 ERR_OBJECT_ID ErrorHandler::next_err_id_ = 100;
 ERR_OBJECT_ID ErrorHandler::static_func_err_id_ = -1001;
 
@@ -31,25 +31,6 @@ ErrorHandler::~ErrorHandler(void)
     }
 }
 
-void 
-ErrorHandler::print_err_info(string err_msg)
-{                       
-    switch (output_to_) {
-        case ERROR_TO_STDERR:
-        {
-            fprintf(stderr, "%s\n", err_msg.c_str());
-        } break;
-        case ERROR_TO_LOG:
-        {
-
-        } break;
-        default:
-        {
-            fprintf(stderr, "print_err_info unknown option.");
-        } break;
-    }
-}
-
 int 
 ErrorHandler::input_err_info(int occur_line, string occur_file, const char *format, ...)
 {
@@ -65,34 +46,13 @@ ErrorHandler::input_err_info(int occur_line, string occur_file, const char *form
 
     va_list arg_ptr;
     va_start(arg_ptr,format);
-
     vsprintf(log_msg_buffer, format, arg_ptr);
     log_msg = log_msg + log_msg_buffer;
-
+    
+    fprintf(stderr, "%s\n", log_msg.c_str());
     va_end(arg_ptr);
 
-    if (output_type_ == ERROR_OUTPUT_IMMEDIATELY) {
-        this->print_err_info(log_msg);
-    } else if (output_type_ == ERROR_OUTPUT_OVERFLOW){
-        obj_map_[err_id_].push(log_msg);
-        if (obj_map_[err_id_].size() >= overflow_size_) {
-            while (! obj_map_[err_id_].empty()) {
-                obj_map_[err_id_].pop(log_msg);
-                this->print_err_info(log_msg);
-            }
-        }
-    }
-
     return 0;
-}
-
-int 
-ErrorHandler::input_static_err_info(ErrorHandler err_handle, int occur_line, string occur_file, const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    err_handle.input_err_info(occur_line, occur_file, format, args);
-    va_end(args);
 }
 
 int 
@@ -102,4 +62,5 @@ ErrorHandler::set_err_output(int output_to, int output_type, int overflow_size)
     output_type_ = output_type;
     overflow_size_ = overflow_size;
 }
+
 }
