@@ -1,5 +1,5 @@
 json规则要点
-1. json有这些子集构成：6种结构字符，字符串，数字和三种字面值。
+1. json有这些子集构成：6种结构字符，字符串，数字和三种字面值，不支持注释。
 
 2. 结构字符：
     a. {}[],:
@@ -14,10 +14,68 @@ json规则要点
         结构：object = begin-object [ member *( value-separator member ) ] 
         end-object
 
-    c. 数组是由方括号([])包围的零个或多个值。
+    c. 数组是由方括号([])包围的零个或多个值,里面的数值要是同一类型的。
         结构：array = begin-array [ value *( value-separator value ) ] end-array
 
-    d. 数字包含整数部分或小数部分，只支持十进制，八进制和十六进制都不被允许。整数部分以零开
+    d. 数值包含整数部分或小数部分，只支持十进制，八进制和十六进制都不被允许。整数部分以零开
         头是不被允许的。不能表示为具体数值的的序列是不被允许的（infinite或NaN），前面可以加
         正负号(+-)表示数字的正负，正号可以省略。
         结构：number = [ minus ] int [ frac ] [ exp ]
+        数值大小限制为 int32 所支持的范围。
+
+    e. 字符串。除了需要转义的字符之外，所有 Unicode 支持的字符要有。字符串由双引号所包围。
+        转义字符：有两种方式可以完成转义，这里只支持使用反斜杠(\)来转义。
+        需要转义的字符：
+                    char = unescaped /
+                    escape (
+                        %x22 /          ; "    quotation mark  U+0022
+                        %x5C /          ; \    reverse solidus U+005C
+                        %x2F /          ; /    solidus         U+002F
+                        %x62 /          ; b    backspace       U+0008
+                        %x66 /          ; f    form feed       U+000C
+                        %x6E /          ; n    line feed       U+000A
+                        %x72 /          ; r    carriage return U+000D
+                        %x74 /          ; t    tab             U+0009
+                        %x75 4HEXDIG )  ; uXXXX                U+XXXX
+        字符长度限制为256个字符。
+4. json的文本编码采用：UTF-8
+
+程序构成：
+json在c++内结构：
+   enum VALUE_TYPE {
+       INT_TYPE,
+       STRING_TYPE,
+       BOOLEAN_TYPE,
+   }
+   struct name_value_pair {
+        int type_;
+        int int_val_;
+        string str_val_;
+        bool bool_val;
+        value_array &varry;
+        object &obj;
+   };
+   struct value_array {
+       VALUE get_val_according_pos(int pos)
+       vector<name_value_pair> array_;
+   }
+   struct object {
+       VALUE get_val_according_name(string name)
+       map<string, name_value_pair> object_;
+   }
+1. 解析器： 将json文本转为c++程序内的结构。
+    格式检查：
+    1. 除字符串外是否出现非规定字符外的字符
+    2. "",{},[]是否成对出现
+    3. 数值大小是否超出范围，数值第一个数字要非零
+    4. 字符串的长度是否过长
+    解析方式：
+    对象解析：从 { 开始到 } 结束。
+    数组解析：从 [ 开始到 ] 结束。
+    字符串解析：从 " 开始到 " 结束。
+    布尔值解析：遇到非字符串内小写的 f 或 t 到 , 或空格结束。
+    名字值对解析：从 { 或 , 开始寻找，遇到 " 调用字符串解析，值解析从 : 开始
+                 依据值的表现类型来将调用对应的值解析函数。名字值对解析以,或}
+                 作为结束。
+
+    读取方式：
