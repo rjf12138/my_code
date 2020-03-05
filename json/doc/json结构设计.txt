@@ -56,12 +56,18 @@ json在c++内结构：
         object &obj;
    };
    struct value_array {
-       VALUE get_val_according_pos(int pos)
        vector<name_value_pair> array_;
+    method:
+        name_value_pair operator[](uint32_t pos);
    }
    struct object {
-       VALUE get_val_according_name(string name)
        map<string, name_value_pair> object_;
+    method:
+       int get_json_value(string name, int &val);
+       int get_json_value(string name, string &str)
+       int get_json_value(string name, bool &b);
+       int get_json_value(string name, object &obj);
+       int get_json_value(string name, array_value &arr);
    }
 1. 解析器： 将json文本转为c++程序内的结构。
     格式检查：
@@ -79,3 +85,6 @@ json在c++内结构：
                  作为结束。
 
     读取方式：
+        因为无论是数组还是对象基本的最基本的值还是：布尔变量，字符串和数值。可以用ByteBuffer
+        来保存它。甚至数组对象也可以保存进去每次解析时只要记录起始位置就行，具体名字对应于读取位置，
+        可以为ByteBuffer设置一组只读的函数read_intX(int start_pos_from_start)。
