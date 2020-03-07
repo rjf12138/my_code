@@ -49,6 +49,25 @@ ret_value(value_type val)
     // }
 }
 
+class ValueType {
+public:
+    ValueType(string str, int i) 
+    : str_(str), i_(i){
+        
+    }
+    void set_struct(value_type vt) {
+        vt_ = vt;
+    }
+    operator int() {return this->i_;}
+    operator string() {return this->str_;}
+    operator value_type() {return this->vt_;}
+
+private:
+    string str_;
+    int i_;
+    value_type vt_;
+};
+
 }
 
 #endif

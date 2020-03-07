@@ -24,15 +24,19 @@ protected:
 
 TEST_F(WeJson_Test, basi_test) 
 {
-    struct value_type val = {0, 2655, false, "Hello, World!"};
-    // ASSERT_EQ(ret_value<int>(val), 2655);
-    std::cout << ret_value<int>(val) << std::endl;
-    val.type_ = 1;
-    std::cout << ret_value<bool>(val) << std::endl;
-    // ASSERT_EQ(ret_value<bool>(val), false);
-    // val.type_ = 2;
-    // std::cout << (ret_value<string>(val), "Hello, World!") << std::endl;
-    // ASSERT_EQ(ret_value<string>(val), "Hello, World!");
+    struct value_type val_stru = {0, 2655, false, "Hello, World!"};
+    ValueType val("Hello, world!", 2333);
+    val.set_struct(val_stru);
+    int vali = val;
+    string valstr = val;
+    value_type valvt = val;
+
+    ASSERT_EQ(vali, 2333);
+    ASSERT_EQ(valstr, "Hello, world!");
+    ASSERT_EQ(valvt.type_, 0);
+    ASSERT_EQ(valvt.int_val_, 2655);
+    ASSERT_EQ(valvt.bool_val_, false);
+    ASSERT_EQ(valvt.str_val_, "Hello, World!");
 }
 
 }
