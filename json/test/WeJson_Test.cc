@@ -24,7 +24,8 @@ protected:
 
 TEST_F(WeJson_Test, basi_test) 
 {
-    struct value_type val_stru = {0, 2655, false, "Hello, World!"};
+    
+    struct value_type val_stru = {0, 2655, false, L"Hello, World!"};
     ValueType val("Hello, world!", 2333);
     val.set_struct(val_stru);
     int vali = val;

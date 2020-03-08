@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/ByteBuffer_Test.dir/ByteBuffer_Test.cc.o  -o bin/ByteBuffer_Test  -L/home/ruanjian/workspace/project/my_code/build/../local/lib -Wl,-rpath,/home/ruanjian/workspace/project/my_code/build/../local/lib ../../../local/lib/libbuffer.a -lgtest -lpthread ../../../local/lib/libthread.a -lpthread 
