@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/WeJson_Test.dir/WeJson_Test.cc.o  -o bin/WeJson_Test  -L/home/ruanjian/workspace/project/my_code/build/../local/lib -Wl,-rpath,/home/ruanjian/workspace/project/my_code/build/../local/lib ../../../local/lib/libwejson.a -lgtest -lpthread 
