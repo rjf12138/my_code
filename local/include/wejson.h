@@ -11,6 +11,7 @@ enum VALUE_TYPE {
     UNKNOWN_TYPE = -1000,
     INT_TYPE = 10001,
     BOOL_TYPE,
+    NULL_TYPE,
     STRING_TYPE,
     JSON_ARRAY_TYPE,
     JSON_OBJECT_TYPE
@@ -23,9 +24,16 @@ struct value_type {
     int type_;
     int int_val_;
     bool bool_val_;
+    string null_val_;
     string str_val_;
     JsonArray jarray_val_;
     JsonObject jobject_val_;
+};
+
+struct elem_pos {
+    int type_;
+    ByteBuffer_Iterator start_pos_;
+    ByteBuffer_Iterator end_pos_;
 };
 
 struct JsonObject {
@@ -148,14 +156,18 @@ private:
     ByteBuffer_Iterator parser_object(ByteBuffer_Iterator start_pos, value_type &val);
     ByteBuffer_Iterator parser_common(ByteBuffer_Iterator start_pos);
 
-    string handle_string(string raw_str); // 字符串转义在此处处理
+    string escape_string(string raw_str); // 字符串转义在此处处理
     ByteBuffer_Iterator get_value_head(ByteBuffer_Iterator curr_pos);
+    ByteBuffer_Iterator get_value_end(ByteBuffer_Iterator curr_pos);
     ByteBuffer_Iterator get_name_head(ByteBuffer_Iterator curr_pos);
     VALUE_TYPE check_valuetype(ByteBuffer_Iterator start_pos);
+
+    int segmentate_string(map<char, vector<ByteBuffer_Iterator>> &ret_pos);
 
 private:
     ByteBuffer json_buffer_;
     JsonObject json_object_;
+    const vector<char> sperate_chars = {'{', '}','[', ']',',',':','"'};
 };
 
 }

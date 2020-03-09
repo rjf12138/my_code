@@ -116,7 +116,7 @@ class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t>
 {
     friend class ByteBuffer;
 public:
-    ByteBuffer_Iterator(void) {}
+    ByteBuffer_Iterator(void) = default;
     explicit ByteBuffer_Iterator(ByteBuffer &buff)
             : buff_(buff), curr_pos_(){}
 
@@ -129,16 +129,6 @@ public:
     ByteBuffer_Iterator end()
     {
         curr_pos_ = buff_.start_write_pos_;
-        return *this;
-    }
-
-    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
-    {
-        if (src != *this) {
-            buff_ = src.buff_;
-            curr_pos_ = src.curr_pos_;
-        }
-
         return *this;
     }
 
@@ -200,6 +190,71 @@ public:
     }
     bool operator!=(const ByteBuffer_Iterator& iter) const {
         return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
+    }
+    bool operator>(const ByteBuffer_Iterator& iter) const {
+        if (buff_ != iter.buff_) {
+            return false;
+        }
+        if (curr_pos_ > iter.curr_pos_) {
+            return true;
+        } else if (curr_pos_ < iter.curr_pos_) {
+            if (curr_pos_ < buff_.start_read_pos_) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    bool operator>=(const ByteBuffer_Iterator& iter) const {
+        if (buff_ != iter.buff_) {
+            return false;
+        }
+        if (curr_pos_ >= iter.curr_pos_) {
+            return true;
+        } else if (curr_pos_ < iter.curr_pos_) {
+            if (curr_pos_ < buff_.start_read_pos_) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    bool operator<(const ByteBuffer_Iterator& iter) const {
+        if (buff_ != iter.buff_) {
+            return false;
+        }
+        if (curr_pos_ >= iter.curr_pos_) {
+            return false;
+        } else if (curr_pos_ < iter.curr_pos_) {
+            if (curr_pos_ < buff_.start_read_pos_) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    bool operator<=(const ByteBuffer_Iterator& iter) const {
+        if (buff_ != iter.buff_) {
+            return false;
+        }
+        if (curr_pos_ > iter.curr_pos_) {
+            return false;
+        } else if (curr_pos_ < iter.curr_pos_) {
+            if (curr_pos_ < buff_.start_read_pos_) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
+    {
+        if (src != *this) {
+            buff_ = src.buff_;
+            curr_pos_ = src.curr_pos_;
+        }
+
+        return *this;
     }
     
 private:
