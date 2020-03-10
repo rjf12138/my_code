@@ -59,10 +59,6 @@ struct JsonObject {
         // https://www.cnblogs.com/kuliuheng/p/5738703.html
     }
 
-    int insert(string key, value_type val) {
-        object_val_[key] = val;
-    }
-private:
     map<string, value_type> object_val_;
 };
 
@@ -150,6 +146,7 @@ public:
 
 private:
     ByteBuffer_Iterator parser_number(ByteBuffer_Iterator start_pos, value_type &val);
+    ByteBuffer_Iterator parser_null(ByteBuffer_Iterator start_pos, value_type &val);
     ByteBuffer_Iterator parser_boolean(ByteBuffer_Iterator start_pos, value_type &val);
     ByteBuffer_Iterator parser_string(ByteBuffer_Iterator start_pos, value_type &val);
     ByteBuffer_Iterator parser_array(ByteBuffer_Iterator start_pos, value_type &val);
@@ -157,9 +154,6 @@ private:
     ByteBuffer_Iterator parser_common(ByteBuffer_Iterator start_pos);
 
     string escape_string(string raw_str); // 字符串转义在此处处理
-    ByteBuffer_Iterator get_value_head(ByteBuffer_Iterator curr_pos);
-    ByteBuffer_Iterator get_value_end(ByteBuffer_Iterator curr_pos);
-    ByteBuffer_Iterator get_name_head(ByteBuffer_Iterator curr_pos);
     VALUE_TYPE check_valuetype(ByteBuffer_Iterator start_pos);
 
     int segmentate_string(map<char, vector<ByteBuffer_Iterator>> &ret_pos);
@@ -167,7 +161,7 @@ private:
 private:
     ByteBuffer json_buffer_;
     JsonObject json_object_;
-    const vector<char> sperate_chars = {'{', '}','[', ']',',',':','"'};
+    const vector<char> sperate_chars = {' ', '\r', '\n','\t','{', '}','[', ']',',',':','"'};
 };
 
 }
