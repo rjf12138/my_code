@@ -184,6 +184,43 @@ public:
 
         return tmp;
     }
+    ByteBuffer_Iterator& operator+(int inc)
+    {
+        // 处于end()的迭代器，加多少值都是没用的
+        if (curr_pos_ == buff_.start_write_pos_) {
+            ostringstream ostr;
+            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            throw runtime_error(ostr.str());
+            return *this;
+        }
+
+        int tmp_pos = (curr_pos_ + buff_.max_buffer_size_ + inc) % buff_.max_buffer_size_;
+        if (buff_.start_read_pos_ < buff_.start_write_pos_ && tmp_pos < buff_.start_read_pos_
+                        && tmp_pos < buff_.start_write_pos_)
+        {
+            curr_pos_ = buff_.start_write_pos_;
+            ostringstream ostr;
+            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            throw runtime_error(ostr.str());
+        } else if (buff_.start_read_pos_ < buff_.start_write_pos_ && tmp_pos > buff_.start_read_pos_
+                        && tmp_pos >= buff_.start_write_pos_)
+        {
+            curr_pos_ = buff_.start_write_pos_;
+            ostringstream ostr;
+            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            throw runtime_error(ostr.str());
+        } else if (buff_.start_read_pos_ > buff_.start_write_pos_ && tmp_pos < buff_.start_read_pos_
+                        && tmp_pos >= buff_.start_write_pos_)
+        {
+            curr_pos_ = buff_.start_write_pos_;
+            ostringstream ostr;
+            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            throw runtime_error(ostr.str());
+        }
+
+        curr_pos_ = tmp_pos;
+        return *this;
+    }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {
         return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
