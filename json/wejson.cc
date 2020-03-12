@@ -6,10 +6,7 @@ WeJson::WeJson(string str)
 {
     this->parser_from_json(str);
 }
-WeJson::WeJson(string json_file_path)
-{
-    this->open_json(json_file_path);
-}
+
 WeJson::~WeJson(void)
 {
 
@@ -45,7 +42,7 @@ WeJson::parser_from_json(ByteBuffer &buff)
         buffer.write_int8(*iter);
     }
 
-    value_type ret_json;
+    ValueTypeCast ret_json;
     this->parser_object(buffer.begin(), ret_json);
     json_object_ = ret_json.jobject_val_;
 
@@ -60,7 +57,7 @@ WeJson::parser_from_json(string str)
 }
 
 ByteBuffer_Iterator 
-WeJson::parser_number(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_number(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     ByteBuffer_Iterator iter = start_pos;
     string str;
@@ -88,7 +85,7 @@ WeJson::parser_number(ByteBuffer_Iterator start_pos, value_type &val)
     return iter;
 }
 ByteBuffer_Iterator 
-WeJson::parser_boolean(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_boolean(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     ByteBuffer_Iterator iter = start_pos;
     int read_size = 0;
@@ -119,7 +116,7 @@ WeJson::parser_boolean(ByteBuffer_Iterator start_pos, value_type &val)
 }
 
 ByteBuffer_Iterator 
-WeJson::parser_null(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_null(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     ByteBuffer_Iterator iter = start_pos;
     int read_size = 4; // null is four bytes.
@@ -132,7 +129,7 @@ WeJson::parser_null(ByteBuffer_Iterator start_pos, value_type &val)
 
     val.type_ = NULL_TYPE;
     if (str == "null") {
-        val.null_val_ = "null";
+        val.null_val_ = nullptr;
     } else {
         ostringstream ostr;
         ostr << "Line: " << __LINE__ << " Expected null, but result is " << str;
@@ -144,7 +141,7 @@ WeJson::parser_null(ByteBuffer_Iterator start_pos, value_type &val)
 }
 
 ByteBuffer_Iterator 
-WeJson::parser_string(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_string(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     ByteBuffer_Iterator iter = start_pos;
     ++iter; // 此时 *iter 值为 "
@@ -169,13 +166,13 @@ WeJson::parser_string(ByteBuffer_Iterator start_pos, value_type &val)
 }
 
 ByteBuffer_Iterator 
-WeJson::parser_array(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     val.type_ = JSON_ARRAY_TYPE;
     ByteBuffer_Iterator iter = start_pos;
     ++iter;
 
-    value_type ret_value;
+    ValueTypeCast ret_value;
     for (; *iter != ']' || iter != json_buffer_.end(); ++iter) {
         VALUE_TYPE ret_value_type = this->check_valuetype(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
@@ -216,7 +213,7 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, value_type &val)
             break;
         }
 
-        val.jarray_val_.push_back(ret_value);
+        val.jarray_val_.array_val_.push_back(ret_value);
     }
     if (iter == json_buffer_.end()) {
         ostringstream ostr;
@@ -228,13 +225,13 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, value_type &val)
 }
 
 ByteBuffer_Iterator 
-WeJson::parser_object(ByteBuffer_Iterator start_pos, value_type &val)
+WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     val.type_ = JSON_OBJECT_TYPE;
     ByteBuffer_Iterator iter = start_pos;
     ++iter; // 指向第一个键值对
 
-    value_type ret_value;
+    ValueTypeCast ret_value;
     string value_name;
     bool flag = false;
     for (; *iter != '}' || iter != json_buffer_.end(); ++iter) {
@@ -342,9 +339,144 @@ WeJson::operator[](const string key)
 }
 
 const ValueTypeCast& 
-WeJson::operator[](string key) const
+WeJson::operator[](const string key) const
 {
-    return json_object_.object_val_[key];
+    auto iter = json_object_.object_val_.find(key);
+    if (iter == json_object_.object_val_.end()) {
+        
+        stringstream str_output;
+        str_output << "key: " << key << " not exists." << std::endl;
+        throw runtime_error(str_output.str());
+        return iter->second;
+    } else {
+        return iter->second;
+    }
+}
+
+//////////////////////////////////////////////////////////////////
+
+ValueTypeCast& 
+JsonObject::operator[](string key) 
+{
+    if (object_val_.find(key) == object_val_.end()) {
+        ostringstream str_output;
+        str_output << "key: " << key << " not exists." << std::endl;
+        throw runtime_error(str_output.str());
+    } else {
+        return object_val_[key];
+    }
+}
+const ValueTypeCast& 
+JsonObject::operator[](const string key) const 
+{
+    auto iter = object_val_.find(key);
+    if (iter == object_val_.end()) {
+        
+        stringstream str_output;
+        str_output << "key: " << key << " not exists." << std::endl;
+        throw runtime_error(str_output.str());
+        return iter->second;
+    } else {
+        return iter->second;
+    }
+    // https://www.cnblogs.com/kuliuheng/p/5738703.html
+}
+
+bool 
+JsonObject::operator==(const JsonObject& rhs) const
+{
+    if (rhs.object_val_.size() != object_val_.size()) {
+        return false;
+    }
+
+    for (auto iter = object_val_.begin(); iter != object_val_.end(); ++iter) {
+        auto rhs_iter = rhs.object_val_.find(iter->first);
+        if (rhs_iter == rhs.object_val_.end()) {
+            return false;
+        }
+
+        if (rhs_iter->second != iter->second) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool 
+JsonObject::operator!=(const JsonObject& rhs) const
+{
+        if (rhs.object_val_.size() != object_val_.size()) {
+        return true;
+    }
+
+    for (auto iter = object_val_.begin(); iter != object_val_.end(); ++iter) {
+        auto rhs_iter = rhs.object_val_.find(iter->first);
+        if (rhs_iter == rhs.object_val_.end()) {
+            return true;
+        }
+
+        if (rhs_iter->second != iter->second) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ValueTypeCast& 
+JsonArray::operator[](size_t key) 
+{
+    if (key > array_val_.size()) {
+        ostringstream str_output;
+        str_output << "pos: " << key << " out of range." << std::endl;
+        throw runtime_error(str_output.str());
+    } else {
+        return array_val_[key];
+    }
+}
+const ValueTypeCast& 
+JsonArray::operator[](const size_t key) const 
+{
+    if (key > array_val_.size()) {
+        ostringstream str_output;
+        str_output << "pos: " << key << " out of range." << std::endl;
+        throw runtime_error(str_output.str());
+    } else {
+        return array_val_[key];
+    }
+}
+
+bool 
+JsonArray::operator==(const JsonArray& rhs) const
+{
+    if (array_val_.size() != rhs.array_val_.size()) {
+        return false;
+    }
+
+    for (int i = 0; i < rhs.array_val_.size(); ++i) {
+        if (rhs.array_val_[i] != array_val_[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool 
+JsonArray::operator!=(const JsonArray& rhs) const
+{
+    if (array_val_.size() != rhs.array_val_.size()) {
+        return true;
+    }
+
+    for (int i = 0; i < rhs.array_val_.size(); ++i) {
+        if (rhs.array_val_[i] != array_val_[i]) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 }

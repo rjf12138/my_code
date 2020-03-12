@@ -24,6 +24,12 @@ protected:
 
 TEST_F(WeJson_Test, basi_test) 
 {
+    WeJson json;
+    json.open_json("./json_text/test.json");
+    ASSERT_EQ(json["name"], ValueTypeCast("rjf12138"));
+    ASSERT_EQ(json["age"], ValueTypeCast(25));
+    ASSERT_EQ(json["height"], ValueTypeCast(171.2));
+    ASSERT_EQ(json["weight"], ValueTypeCast(50.3));
 }
 
 }

@@ -17,123 +17,229 @@ enum VALUE_TYPE {
     JSON_OBJECT_TYPE
 };
 
-struct JsonArray;
-struct JsonObject;
-
-struct value_type {
-    int type_;
-    int number_val_;
-    bool bool_val_;
-    string null_val_;
-    string str_val_;
-    JsonArray jarray_val_;
-    JsonObject jobject_val_;
-};
-
-class ValueTypeCast {
-public:
-    ValueTypeCast(value_type vt): value_type_(vt) {}
-    ~ValueTypeCast() = default;
-
-    void set_value(value_type vt) {
-        value_type_ = vt;
-    }
-
-    operator int() const {
-        if (value_type_.type_ == NUMBER_TYPE) {
-            return value_type_.number_val_;
-        }
-    }
-    operator bool() const {
-        if (value_type_.type_ == BOOL_TYPE) {
-            return value_type_.bool_val_;
-        }
-    }
-    operator string() const  {
-        if (value_type_.type_ == STRING_TYPE) {
-            return value_type_.str_val_;
-        }
-    }
-    operator JsonArray() const  {
-        if (value_type_.type_ == JSON_ARRAY_TYPE) {
-            return value_type_.jarray_val_;
-        }
-    }
-    operator JsonObject() const {
-        if (value_type_.type_ == JSON_OBJECT_TYPE) {
-            return value_type_.jobject_val_;
-        }
-    }
-
-    operator JsonObject() const {
-        if (value_type_.type_ == JSON_OBJECT_TYPE) {
-            return value_type_.jobject_val_;
-        }
-    }
-
-public :
-    value_type value_type_;
-};
+class ValueTypeCast;
 
 struct JsonObject {
-    ValueTypeCast& operator[](string key) {
-        if (object_val_.find(key) == object_val_.end()) {
-            ostringstream str_output;
-            str_output << "key: " << key << " not exists." << std::endl;
-            throw runtime_error(str_output.str());
-        } else {
-            return object_val_[key];
-        }
-    }
-    const ValueTypeCast& operator[](const string key) const {
-        auto iter = object_val_.find(key);
-        if (iter == object_val_.end()) {
-            
-            stringstream str_output;
-            str_output << "key: " << key << " not exists." << std::endl;
-            throw runtime_error(str_output.str());
-            return iter->second;
-        } else {
-            return iter->second;
-        }
-        // https://www.cnblogs.com/kuliuheng/p/5738703.html
-    }
+    ValueTypeCast& operator[](string key);
+    const ValueTypeCast& operator[](string key) const;
+
+    bool operator==(const JsonObject& rhs) const;
+    bool operator!=(const JsonObject& rhs) const;
 public:
     map<string, ValueTypeCast> object_val_;
 };
 
 struct JsonArray {
-    ValueTypeCast& operator[](size_t key) {
-        if (key > array_val_.size()) {
-            ostringstream str_output;
-            str_output << "pos: " << key << " out of range." << std::endl;
-            throw runtime_error(str_output.str());
-        } else {
-            return array_val_[key];
+    ValueTypeCast& operator[](size_t key);
+    const ValueTypeCast& operator[](const size_t key) const;
+
+    bool operator==(const JsonArray& rhs) const;
+    bool operator!=(const JsonArray& rhs) const; 
+public:
+    vector<ValueTypeCast> array_val_;
+};
+
+class ValueTypeCast {
+public:
+    ValueTypeCast(void){}
+    ValueTypeCast(double val): type_(NUMBER_TYPE), number_val_(val){}
+    ValueTypeCast(int32_t val): type_(NUMBER_TYPE), number_val_(val){}
+    ValueTypeCast(string val): type_(STRING_TYPE), str_val_(val){}
+    ValueTypeCast(bool val): type_(BOOL_TYPE), bool_val_(val){}
+    ValueTypeCast(int* val): type_(NULL_TYPE), null_val_(val){}
+    ValueTypeCast(JsonObject val): type_(JSON_OBJECT_TYPE), jobject_val_(val){}
+    ValueTypeCast(JsonArray val): type_(JSON_ARRAY_TYPE), jarray_val_(val){}
+    ~ValueTypeCast() = default;
+
+    operator double()  {
+        if (type_ == NUMBER_TYPE) {
+            return number_val_;
         }
     }
-    const ValueTypeCast& operator[](const size_t key) const {
-        if (key > array_val_.size()) {
-            ostringstream str_output;
-            str_output << "pos: " << key << " out of range." << std::endl;
-            throw runtime_error(str_output.str());
-        } else {
-            return array_val_[key];
+    operator bool()  {
+        if (type_ == BOOL_TYPE) {
+            return bool_val_;
+        }
+    }
+    operator string()   {
+        if (type_ == STRING_TYPE) {
+            return str_val_;
+        }
+    }
+    operator JsonArray()   {
+        if (type_ == JSON_ARRAY_TYPE) {
+            return jarray_val_;
+        }
+    }
+    operator JsonObject()  {
+        if (type_ == JSON_OBJECT_TYPE) {
+            return jobject_val_;
         }
     }
 
-    void push_back(value_type val) {
-        array_val_.push_back(val);
+    ValueTypeCast& operator=(double val) {
+        type_ = NUMBER_TYPE;
+        number_val_ = val;
+
+        return *this;
     }
-public:
-    vector<ValueTypeCast> array_val_;
+
+    ValueTypeCast& operator=(string val) {
+        type_ = STRING_TYPE;
+        str_val_ = val;
+    }
+
+    ValueTypeCast& operator=(bool val) {
+        type_ = BOOL_TYPE;
+        bool_val_ = val;
+        return *this;
+    }
+
+    ValueTypeCast& operator=(int* val) {
+        type_ = NULL_TYPE;
+        null_val_ = val;
+        return *this;
+    }
+
+    ValueTypeCast& operator=(JsonObject val) {
+        type_ = JSON_OBJECT_TYPE;
+        jobject_val_ = val;
+        return *this;
+    }
+
+    ValueTypeCast& operator=(JsonArray val) {
+        type_ = JSON_ARRAY_TYPE;
+        jarray_val_ = val;
+        return *this;
+    }
+
+    bool operator==(const double& rhs) {
+        if (type_ != NUMBER_TYPE) {
+            return false;
+        }
+
+        if (rhs != number_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const string& rhs) {
+        if (type_ != STRING_TYPE) {
+            return false;
+        }
+
+        if (rhs != str_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const bool& rhs) {
+        if (type_ != BOOL_TYPE) {
+            return false;
+        }
+
+        if (rhs != bool_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const int*& rhs) {
+        if (type_ != NULL_TYPE) {
+            return false;
+        }
+
+        if (rhs != null_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const JsonObject& rhs) {
+        if (type_ != JSON_OBJECT_TYPE) {
+            return false;
+        }
+
+        if (rhs != jobject_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const JsonArray& rhs) {
+        if (type_ != JSON_ARRAY_TYPE) {
+            return false;
+        }
+
+        if (rhs != jarray_val_) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool operator==(const ValueTypeCast& rhs) const {
+        if (type_ != rhs.type_) {
+            return false;
+        }
+
+        switch (type_)
+        {
+            case JSON_OBJECT_TYPE:
+            {
+                return (jobject_val_ == rhs.jobject_val_);
+            } break;
+            case JSON_ARRAY_TYPE:
+            {
+                return (jarray_val_ == rhs.jarray_val_);
+            } break;
+            case STRING_TYPE:
+            {
+                return (str_val_ == rhs.str_val_);
+            } break;
+            case BOOL_TYPE:
+            {
+                return (bool_val_ == rhs.bool_val_);
+            }break;
+            case NULL_TYPE:
+            {
+                return (null_val_ == rhs.null_val_);
+            } break;
+            case NUMBER_TYPE:
+            {
+                return (number_val_ == rhs.number_val_);
+            } break;
+        default:
+            break;
+        }
+
+        return false;
+    }
+
+    bool operator!=(const ValueTypeCast& rhs) const {
+        return !(*this == rhs);
+    }
+public :
+    VALUE_TYPE type_;
+    double number_val_;
+    bool bool_val_;
+    string str_val_;
+    int *null_val_;
+    JsonArray jarray_val_;
+    JsonObject jobject_val_;
 };
 
 class WeJson {
 public:
     WeJson(void);
     WeJson(string str);
-    WeJson(string json_file_path);
     ~WeJson(void);
 
     bool check_json(ByteBuffer &buff);
@@ -146,12 +252,12 @@ public:
     const ValueTypeCast& operator[](const string key) const;
 
 private:
-    ByteBuffer_Iterator parser_number(ByteBuffer_Iterator start_pos, value_type &val);
-    ByteBuffer_Iterator parser_null(ByteBuffer_Iterator start_pos, value_type &val);
-    ByteBuffer_Iterator parser_boolean(ByteBuffer_Iterator start_pos, value_type &val);
-    ByteBuffer_Iterator parser_string(ByteBuffer_Iterator start_pos, value_type &val);
-    ByteBuffer_Iterator parser_array(ByteBuffer_Iterator start_pos, value_type &val);
-    ByteBuffer_Iterator parser_object(ByteBuffer_Iterator start_pos, value_type &val);
+    ByteBuffer_Iterator parser_number(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
+    ByteBuffer_Iterator parser_null(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
+    ByteBuffer_Iterator parser_boolean(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
+    ByteBuffer_Iterator parser_string(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
+    ByteBuffer_Iterator parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
+    ByteBuffer_Iterator parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
     ByteBuffer_Iterator parser_common(ByteBuffer_Iterator start_pos);
 
     string escape_string(string raw_str); // 字符串转义在此处处理
