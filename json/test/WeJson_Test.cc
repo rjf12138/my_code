@@ -26,10 +26,15 @@ TEST_F(WeJson_Test, basi_test)
 {
     WeJson json;
     json.open_json("./json_text/test.json");
+    cout << "point 1" << endl;
     ASSERT_EQ(json["name"], ValueTypeCast("rjf12138"));
+    cout << "point 1" << endl;
     ASSERT_EQ(json["age"], ValueTypeCast(25));
+    cout << "point 1" << endl;
     ASSERT_EQ(json["height"], ValueTypeCast(171.2));
+    cout << "point 1" << endl;
     ASSERT_EQ(json["weight"], ValueTypeCast(50.3));
+    cout << "point 1" << endl;
 }
 
 }

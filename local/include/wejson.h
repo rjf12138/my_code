@@ -242,7 +242,6 @@ public:
     WeJson(string str);
     ~WeJson(void);
 
-    bool check_json(ByteBuffer &buff);
     int open_json(string json_file_path);
     int parser_from_json(string str);
     int parser_from_json(ByteBuffer &buff);
@@ -260,11 +259,11 @@ private:
     ByteBuffer_Iterator parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val);
     ByteBuffer_Iterator parser_common(ByteBuffer_Iterator start_pos);
 
-    string escape_string(string raw_str); // 字符串转义在此处处理
     VALUE_TYPE check_valuetype(ByteBuffer_Iterator start_pos);
 
 private:
-    ByteBuffer json_buffer_;
+    ByteBuffer raw_json_buffer_;
+    ByteBuffer simplify_json_buffer_;
     JsonObject json_object_;
     const vector<char> sperate_chars = {' ', '\r', '\n','\t','{', '}','[', ']',',',':','"'};
 };

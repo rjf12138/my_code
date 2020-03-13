@@ -134,6 +134,11 @@ public:
 
     int8_t operator*()
     {
+        if (curr_pos_ == buff_.start_write_pos_) {
+            ostringstream ostr;
+            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            throw runtime_error(ostr.str());
+        }
         return buff_.buffer_[curr_pos_];
     }
     // 前置++
@@ -184,42 +189,23 @@ public:
 
         return tmp;
     }
-    ByteBuffer_Iterator& operator+(int inc)
+    ByteBuffer_Iterator operator+(int inc)
     {
-        // 处于end()的迭代器，加多少值都是没用的
-        if (curr_pos_ == buff_.start_write_pos_) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
-            throw runtime_error(ostr.str());
-            return *this;
+        ByteBuffer_Iterator tmp_iter = *this;
+        for (int i = 0; i < inc; ++i) {
+            ++tmp_iter;
         }
 
-        int tmp_pos = (curr_pos_ + buff_.max_buffer_size_ + inc) % buff_.max_buffer_size_;
-        if (buff_.start_read_pos_ < buff_.start_write_pos_ && tmp_pos < buff_.start_read_pos_
-                        && tmp_pos < buff_.start_write_pos_)
-        {
-            curr_pos_ = buff_.start_write_pos_;
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
-            throw runtime_error(ostr.str());
-        } else if (buff_.start_read_pos_ < buff_.start_write_pos_ && tmp_pos > buff_.start_read_pos_
-                        && tmp_pos >= buff_.start_write_pos_)
-        {
-            curr_pos_ = buff_.start_write_pos_;
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
-            throw runtime_error(ostr.str());
-        } else if (buff_.start_read_pos_ > buff_.start_write_pos_ && tmp_pos < buff_.start_read_pos_
-                        && tmp_pos >= buff_.start_write_pos_)
-        {
-            curr_pos_ = buff_.start_write_pos_;
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
-            throw runtime_error(ostr.str());
+        return tmp_iter;
+    }
+
+    ByteBuffer_Iterator operator-(int inc) {
+        ByteBuffer_Iterator tmp_iter = *this;
+        for (int i = 0; i < inc; ++i) {
+            --tmp_iter;
         }
 
-        curr_pos_ = tmp_pos;
-        return *this;
+        return tmp_iter;
     }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {

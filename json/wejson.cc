@@ -24,36 +24,53 @@ WeJson::open_json(string json_file_path)
 
     struct stat file_info;
     off_t file_size = json_file.fileinfo(file_info);
-    json_file.read(json_buffer_, file_info.st_size);
-    this->parser_from_json(json_buffer_);
+    json_file.read(raw_json_buffer_, file_info.st_size);
+    this->parser_from_json(raw_json_buffer_);
 }
 
 int 
 WeJson::parser_from_json(ByteBuffer &buff)
 {
-    this->check_json(buff);
-    ByteBuffer buffer;
+    bool quotation_marks = false;
+    cout << "data_size: " << buff.data_size() << endl;
     for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
-        for (int i = 0; i < 4; ++i) {
-            if (*iter == sperate_chars[i]) {
-                continue;
+        cout << *iter;
+    }
+    cout << endl;
+    int i = 0;
+    for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
+        if (quotation_marks == false && *iter == '"') {
+            quotation_marks = true;
+        } else if (quotation_marks == true && *iter == '"' && *(iter-1) != '\\') {
+            quotation_marks = false;
+        }
+        for (i = 0; i < 4; ++i) {
+            if (sperate_chars[i] == *iter) {
+                break;
             }
         }
-        buffer.write_int8(*iter);
+        if (i < 4 && quotation_marks == false) {
+            continue;
+        }
+        simplify_json_buffer_.write_int8(*iter);
     }
-
+    for (auto iter = simplify_json_buffer_.begin(); iter != simplify_json_buffer_.end(); ++iter) {
+        cout << *iter;
+    }
+    cout << endl;
+    cout << "parse start" << endl;
     ValueTypeCast ret_json;
-    this->parser_object(buffer.begin(), ret_json);
+    this->parser_object(simplify_json_buffer_.begin(), ret_json);
     json_object_ = ret_json.jobject_val_;
-
+    cout << "parse end" << endl;
     return 0;
 }
 
 int 
 WeJson::parser_from_json(string str)
 {
-    json_buffer_.write_bytes(str.c_str(), str.length());
-    this->parser_from_json(json_buffer_);
+    raw_json_buffer_.write_bytes(str.c_str(), str.length());
+    this->parser_from_json(raw_json_buffer_);
 }
 
 ByteBuffer_Iterator 
@@ -62,7 +79,7 @@ WeJson::parser_number(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
     ByteBuffer_Iterator iter = start_pos;
     string str;
     bool is_decimal = false;
-    for (; iter != json_buffer_.end() || !isdigit(*iter); ++iter) {
+    for (; iter != simplify_json_buffer_.end() || !isdigit(*iter); ++iter) {
         if (*iter == '0' && iter == start_pos) {
             if (*(iter+1) != '.') {
                 ostringstream ostr;
@@ -144,22 +161,25 @@ ByteBuffer_Iterator
 WeJson::parser_string(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
     ByteBuffer_Iterator iter = start_pos;
-    ++iter; // 此时 *iter 值为 "
-
+    ++iter; // 此时 *iter 值为 ",指向字符串的第一个字符
+    cout << *iter << endl;
     string str;
-    for (; *iter != '"' || iter != json_buffer_.end(); ++iter) {
+    for (; iter != simplify_json_buffer_.end(); ++iter) {
+        if (*iter == '"' && *(iter - 1) != '\\') {
+            break;
+        }
         str += *iter;
     }
 
-    if (iter == json_buffer_.end())
+    if (iter == simplify_json_buffer_.end())
     {
         ostringstream ostr;
         ostr << "Line: " << __LINE__ << " String need to surround by \"\" " << str;
         throw runtime_error(ostr.str());
     }
-
+    cout << str << std::endl;
     val.type_ = STRING_TYPE;
-    val.str_val_ = this->escape_string(str);
+    val.str_val_ = str;
     ++iter; //  iter 指向下一个字符
 
     return iter;
@@ -173,7 +193,7 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
     ++iter;
 
     ValueTypeCast ret_value;
-    for (; *iter != ']' || iter != json_buffer_.end(); ++iter) {
+    for (; *iter != ']' || iter != simplify_json_buffer_.end(); ++iter) {
         VALUE_TYPE ret_value_type = this->check_valuetype(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',') {
@@ -215,7 +235,7 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 
         val.jarray_val_.array_val_.push_back(ret_value);
     }
-    if (iter == json_buffer_.end()) {
+    if (iter == simplify_json_buffer_.end()) {
         ostringstream ostr;
         ostr << "Line: " << __LINE__ << " Array need to surround by []";
         throw runtime_error(ostr.str());
@@ -230,26 +250,29 @@ WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
     val.type_ = JSON_OBJECT_TYPE;
     ByteBuffer_Iterator iter = start_pos;
     ++iter; // 指向第一个键值对
-
+    cout << __LINE__ << endl;
     ValueTypeCast ret_value;
     string value_name;
     bool flag = false;
-    for (; *iter != '}' || iter != json_buffer_.end(); ++iter) {
+    for (; *iter != '}' && iter != simplify_json_buffer_.end(); ++iter) {
+        cout << *iter << endl;
         VALUE_TYPE ret_value_type = this->check_valuetype(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
-            if (*iter != ',' || *iter != ':'){
+            if (*iter != ',' || *iter != ':') {
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in object: " << *iter;
                 throw runtime_error(ostr.str());
             }
             continue;
         }
+        cout << __LINE__ << endl;
         if (flag == false && ret_value_type == STRING_TYPE) {
             iter = this->parser_string(iter, ret_value);
             value_name = ret_value.str_val_;
             flag = true;
             continue;
         }
+        cout << __LINE__ << endl;
         switch (ret_value_type)
         {
             case JSON_OBJECT_TYPE:
@@ -262,6 +285,7 @@ WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
             } break;
             case STRING_TYPE:
             {
+                cout << "string" << endl;
                 iter = this->parser_string(iter, ret_value);
             } break;
             case BOOL_TYPE:
