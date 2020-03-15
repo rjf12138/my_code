@@ -1,0 +1,17 @@
+build_project:
+1. 自动化项目的生成、写日志和每个项目要做的事
+2. 自动化项目：
+目录结构：
+1. inc src lib doc test config
+2. 编译由对应的目录生成然后拷贝到安装目录local中
+3. 生成用于断点调试的vscode配置文件
+4. 主动提交到github上
+
+buff:
+    byte_buffer:
+        1. 修改字符串读取，默认读是以'\0'结尾，但也可以指定读取具体长度的字符串
+        2. 限定 byte_buffer 最大的长度
+        3. 对迭代器类型写单元测试
+
+thread:
+    1. 添加线程池

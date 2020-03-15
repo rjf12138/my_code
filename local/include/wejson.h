@@ -261,7 +261,7 @@ private:
 
     VALUE_TYPE check_valuetype(ByteBuffer_Iterator start_pos);
 
-private:
+public:
     ByteBuffer raw_json_buffer_;
     ByteBuffer simplify_json_buffer_;
     JsonObject json_object_;

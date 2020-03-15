@@ -21,20 +21,84 @@ protected:
         // before the destructor).
     }
 };
+void print(JsonObject &obj);
+void print(JsonArray &arry);
+void print(JsonArray &arry)
+{
+    for (int i = 0; i < arry.array_val_.size(); ++i) {
+        switch (arry.array_val_[i].type_)
+        {
+            case JSON_OBJECT_TYPE:
+            {
+                print(arry.array_val_[i].jobject_val_);
+            } break;
+            case JSON_ARRAY_TYPE:
+            {
+                print(arry.array_val_[i].jarray_val_);
+            } break;
+            case STRING_TYPE:
+            {
+                std::cout << (string)arry.array_val_[i] << std::endl;
+            } break;
+            case BOOL_TYPE:
+            {
+                std::cout << (bool)arry.array_val_[i] << std::endl;
+            }break;
+            case NULL_TYPE:
+            {
+                std::cout << (string)arry.array_val_[i] << std::endl;
+            } break;
+            case NUMBER_TYPE:
+            {
+                std::cout << (double)arry.array_val_[i] << std::endl;
+            } break;
+        default:
+            break;
+        }
+    }
+}
+
+void print(JsonObject &obj)
+{
+    for (auto iter = obj.object_val_.begin(); iter != obj.object_val_.end(); ++iter) {
+        switch (iter->second.type_)
+        {
+            case JSON_OBJECT_TYPE:
+            {
+                print(iter->second.jobject_val_);
+            } break;
+            case JSON_ARRAY_TYPE:
+            {
+                print(iter->second.jarray_val_);
+            } break;
+            case STRING_TYPE:
+            {
+                std::cout << (string)iter->second << std::endl;
+            } break;
+            case BOOL_TYPE:
+            {
+                std::cout << (bool)iter->second << std::endl;
+            }break;
+            case NULL_TYPE:
+            {
+                std::cout << (string)iter->second << std::endl;
+            } break;
+            case NUMBER_TYPE:
+            {
+                std::cout << (double)iter->second << std::endl;
+            } break;
+        default:
+            break;
+        }
+    }
+}
 
 TEST_F(WeJson_Test, basi_test) 
 {
     WeJson json;
     json.open_json("./json_text/test.json");
-    cout << "point 1" << endl;
-    ASSERT_EQ(json["name"], ValueTypeCast("rjf12138"));
-    cout << "point 1" << endl;
-    ASSERT_EQ(json["age"], ValueTypeCast(25));
-    cout << "point 1" << endl;
-    ASSERT_EQ(json["height"], ValueTypeCast(171.2));
-    cout << "point 1" << endl;
-    ASSERT_EQ(json["weight"], ValueTypeCast(50.3));
-    cout << "point 1" << endl;
+    JsonObject &obj = json.json_object_;
+    print(obj);
 }
 
 }
