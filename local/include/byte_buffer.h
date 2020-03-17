@@ -209,10 +209,10 @@ public:
     }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
+        return (curr_pos_ == iter.curr_pos_ && buff_.buffer_ == iter.buff_.buffer_);
     }
     bool operator!=(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
+        return (curr_pos_ != iter.curr_pos_ || buff_.buffer_ != iter.buff_.buffer_);
     }
     bool operator>(const ByteBuffer_Iterator& iter) const {
         if (buff_ != iter.buff_) {

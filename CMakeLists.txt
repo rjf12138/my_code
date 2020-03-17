@@ -5,7 +5,7 @@ include_directories(./local/include/)
 link_directories(${PROJECT_BINARY_DIR}/../local/lib)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    add_compile_options(-std=c++11)
+    add_compile_options(-g -std=c++11)
     message(STATUS "optional:-std=c++11")   
 endif(CMAKE_COMPILER_IS_GNUCXX)
 

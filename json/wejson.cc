@@ -71,7 +71,7 @@ WeJson::parser_number(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
     bool is_decimal = false;
     for (; iter != simplify_json_buffer_.end() && *iter != ','; ++iter) {
         if (*iter == '0' && iter == start_pos) {
-            if (*(iter+1) != '.') {
+            if (isdigit(*(iter+1))) {
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Zero can't be first number of integer!";
                 throw runtime_error(ostr.str());
@@ -222,6 +222,9 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
         }
 
         val.jarray_val_.array_val_.push_back(ret_value);
+        if (*iter == ']') {
+            break;
+        }
     }
     if (iter == simplify_json_buffer_.end()) {
         ostringstream ostr;
@@ -235,6 +238,10 @@ WeJson::parser_array(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 ByteBuffer_Iterator 
 WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
 {
+    for (auto iter = simplify_json_buffer_.begin(); iter != simplify_json_buffer_.end(); ++iter) {
+        std::cout << *iter;
+    }
+    std::cout << std::endl;
     val.type_ = JSON_OBJECT_TYPE;
     ByteBuffer_Iterator iter = start_pos;
     ++iter; // 指向第一个键值对
@@ -242,9 +249,10 @@ WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
     string value_name;
     bool flag = false;
     for (; iter != simplify_json_buffer_.end() && *iter != '}'; ++iter) {
+        std::cout << *iter << std::endl;
         VALUE_TYPE ret_value_type = this->check_valuetype(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
-            if (*iter != ',' && *iter != ':') {
+            if (*iter != ',' && *iter != ':' && *iter != ']') {
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in object: " << *iter;
                 throw runtime_error(ostr.str());
@@ -290,12 +298,19 @@ WeJson::parser_object(ByteBuffer_Iterator start_pos, ValueTypeCast &val)
         }
         if (val.jobject_val_.object_val_.find(value_name) == val.jobject_val_.object_val_.end()) {
             val.jobject_val_.object_val_[value_name] = ret_value;
+            if (ret_value.type_ == STRING_TYPE) {
+                std::cout << (string)val.jobject_val_.object_val_[value_name] << std::endl;
+            }
         } else {
             ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " Array need to surround by []";
+            std::cout << ret_value.str_val_ << std::endl;
+            ostr << "Line: " << __LINE__ << " There's already " << value_name << " exists.";
             throw runtime_error(ostr.str());
         }
         flag = false;
+        if (*iter == '}') {
+            break;
+        }
     }
     if (iter != simplify_json_buffer_.end()) {
         ++iter;

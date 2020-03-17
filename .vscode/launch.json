@@ -8,7 +8,7 @@
             "name": "my_code",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "/home/ruanjian/workspace/project/my_code/build/json/test/bin/WeJson_Test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -22,7 +22,6 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "g++-7 build active file",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ]

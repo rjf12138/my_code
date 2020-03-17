@@ -3,12 +3,9 @@
         {
             "type": "shell",
             "label": "my_code",
-            "command": "/usr/bin/g++-7",
+            "command": "${workspaceFolder}/compile.sh",
             "args": [
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "-r"
             ],
             "options": {
                 "cwd": "/usr/bin"
