@@ -28,9 +28,42 @@ public:
 
     virtual ostream& operator<<(ostream &os) {};
     virtual istream& operator>>(istream &is) {};
-    // virtual bool operator==(const JsonType& rhs) const = 0;
-    // virtual bool operator!=(const JsonType& rhs) const = 0;
-    // operator type_() {}
+    virtual VALUE_TYPE check_value_type(ByteBuffer_Iterator &iter) {
+        if (isdigit(*iter) || *iter == '-' || *iter == '+') {
+            return NUMBER_TYPE;
+        }
+        switch (*iter)
+        {
+            case '{':
+            {
+                return JSON_OBJECT_TYPE;
+            } break;
+            case '[':
+            {
+                return JSON_ARRAY_TYPE;
+            } break;
+            case '"':
+            {
+                return STRING_TYPE;
+            } break;
+            case 't':
+            {
+                return BOOL_TYPE;
+            }break;
+            case 'f':
+            {
+                return BOOL_TYPE;
+            }break;
+            case 'n':
+            {
+                return NULL_TYPE;
+            } break;
+            default:
+                break;
+        }
+
+        return UNKNOWN_TYPE;
+    }
 private:
     VALUE_TYPE json_value_type_;
 };
@@ -128,7 +161,6 @@ class JsonObject : public JsonType {
     virtual bool operator==(const JsonObject& rhs) const;
     virtual bool operator!=(const JsonObject& rhs) const;
     ValueTypeCast& operator[](string key);
-    const ValueTypeCast& operator[](string key) const;
 
 private:
     map<string, ValueTypeCast> object_val_;
@@ -171,12 +203,18 @@ public:
     operator JsonString();
     operator JsonObject();
     operator JsonArray();
+    operator JsonNull();
 
     ValueTypeCast& operator=(JsonBool val);
     ValueTypeCast& operator=(JsonNumber val);
     ValueTypeCast& operator=(JsonString val);
     ValueTypeCast& operator=(JsonObject val);
     ValueTypeCast& operator=(JsonArray val);
+    ValueTypeCast& operator=(JsonNull val);
+
+    ostream& operator<<(ostream &os);
+    bool operator==(const ValueTypeCast& rhs) const;
+    bool operator!=(const ValueTypeCast& rhs) const; 
 
 private:
     VALUE_TYPE json_value_type_;
