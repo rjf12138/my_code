@@ -641,12 +641,16 @@ bool JsonArray::operator!=(const JsonArray& rhs) const
 
 ValueTypeCast::ValueTypeCast(void) {}
 ValueTypeCast::ValueTypeCast(JsonBool value)
-: json_value_type_(BOOL_TYPE), json_bool_value_(value) {}
+    : json_value_type_(BOOL_TYPE), json_bool_value_(value) {}
 ValueTypeCast::ValueTypeCast(JsonNumber value)
-ValueTypeCast::ValueTypeCast(JsonString value);
-ValueTypeCast::ValueTypeCast(JsonObject value);
-ValueTypeCast::ValueTypeCast(JsonArray value);
-ValueTypeCast::~ValueTypeCast(void);
+    : json_number_value_(value), json_value_type_(NUMBER_TYPE) {}
+ValueTypeCast::ValueTypeCast(JsonString value)
+    : json_string_value_(value), json_value_type_(STRING_TYPE) {}
+ValueTypeCast::ValueTypeCast(JsonObject value)
+    : json_object_value_(value), json_value_type_(JSON_OBJECT_TYPE) {}
+ValueTypeCast::ValueTypeCast(JsonArray value)
+    : json_value_type_(JSON_ARRAY_TYPE), json_array_value_(value) {}
+ValueTypeCast::~ValueTypeCast(void) {}
 
     operator JsonBool();
     operator JsonNumber();
