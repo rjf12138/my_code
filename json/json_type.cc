@@ -281,6 +281,67 @@ JsonNull::operator string()
 {
     return value_;
 }
+///////////////////////////////////////////////////////////
+
+JsonString::JsonString(void) {}
+JsonString::JsonString(string val): value_(val) {}
+JsonString::~JsonString(void) {}
+
+ByteBuffer_Iterator 
+JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos)
+{
+    ByteBuffer_Iterator iter = value_start_pos;
+    ++iter; // 此时 *iter 值为 ",指向字符串的第一个字符
+    string str;
+    for (; iter != json_end_pos; ++iter) {
+        if (*iter == '"' && *(iter - 1) != '\\') {
+            break;
+        }
+        str += *iter;
+    }
+
+    if (iter == json_end_pos)
+    {
+        ostringstream ostr;
+        ostr << "Line: " << __LINE__ << " String need to surround by \"\" " << str;
+        throw runtime_error(ostr.str());
+    }
+    value_ = str;
+    ++iter; //  iter 指向下一个字符
+
+    return iter;
+}
+
+string 
+JsonString::generate(void)
+{
+    return value_;
+}
+
+ostream& 
+JsonString::operator<<(ostream &os)
+{
+    os << value_;
+
+    return os;
+}
+
+bool JsonString::operator==(const JsonString& rhs) const
+{
+    if (value_ != rhs.value_) {
+        return false;
+    }
+
+    return true;
+}
+bool JsonString::operator!=(const JsonString& rhs) const
+{
+    return !(*this == rhs);
+}
+JsonString::operator string()
+{
+    return value_;
+}
 
 ///////////////////////////////////////////////////////////
 
@@ -444,5 +505,165 @@ JsonObject::operator[](string key)
     return object_val_[key];
 }
 
+////////////////////////////////////////////////////////////
+
+JsonArray::JsonArray(void){}
+JsonArray::~JsonArray(void){}
+
+ByteBuffer_Iterator 
+JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos)
+{
+    ByteBuffer_Iterator iter = value_start_pos;
+    ++iter;
+
+    ValueTypeCast ret_value;
+    for (; iter != json_end_pos && *iter != ']'; ++iter) {
+        VALUE_TYPE ret_value_type = this->check_value_type(iter);
+        if (ret_value_type == UNKNOWN_TYPE) {
+            if (*iter != ',') {
+                ostringstream ostr;
+                ostr << "Line: " << __LINE__ << " Unknown character in array: " << *iter;
+                throw runtime_error(ostr.str());
+            }
+            continue;
+        }
+        ValueTypeCast vtc;
+        switch (ret_value_type)
+        {
+            case JSON_OBJECT_TYPE:
+            {
+                JsonObject val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+            case JSON_ARRAY_TYPE:
+            {
+                JsonArray val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+            case STRING_TYPE:
+            {
+                JsonString val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+            case BOOL_TYPE:
+            {
+                JsonBool val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+            case NULL_TYPE:
+            {
+                JsonNull val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+            case NUMBER_TYPE:
+            {
+                JsonNumber val;
+                iter = val.parse(iter, json_end_pos);
+                vtc = val;
+            } break;
+        default:
+            break;
+        }
+
+        array_val_.push_back(vtc);
+        if (*iter == ']') {
+            break;
+        }
+    }
+    if (iter == json_end_pos) {
+        ostringstream ostr;
+        ostr << "Line: " << __LINE__ << " Array need to surround by []";
+        throw runtime_error(ostr.str());
+    }
+    ++iter;
+    return iter;
+}
+string 
+JsonArray::generate(void)
+{
+    ostringstream ostr;
+    ostr << "[";
+    for (int i = 0; i < array_val_.size(); ++i) {
+        if (i != 0) { // 每输出一个类型后跟一个','
+            ostr << ",\n\t";
+        } else {
+            ostr << "\n\t";
+        }
+        array_val_ << array_val_[i];
+    }
+
+    ostr << "\n]";
+}
+
+ostream& 
+JsonArray::operator<<(ostream &os)
+{
+    os << this->generate();
+
+    return os;
+}
+
+ValueTypeCast& 
+JsonArray::operator[](size_t key)
+{
+    return array_val_[key];
+}
+
+bool 
+JsonArray::operator==(const JsonArray& rhs) const
+{
+    if (array_val_.size() != rhs.array_val_.size()) {
+        return false;
+    }
+
+    for (int i = 0; i > array_val_.size(); ++i) {
+        if (array_val_[i].json_array_value_ != rhs.array_val_[i].json_array_value_) {
+            return false;
+        }
+        if (array_val_[i] != rhs.array_val_[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+bool JsonArray::operator!=(const JsonArray& rhs) const
+{
+    return !(*this == rhs);
+}
+
+/////////////////////////////////////////////////////////////////
+
+ValueTypeCast::ValueTypeCast(void) {}
+ValueTypeCast::ValueTypeCast(JsonBool value)
+: json_value_type_(BOOL_TYPE), json_bool_value_(value) {}
+ValueTypeCast::ValueTypeCast(JsonNumber value)
+ValueTypeCast::ValueTypeCast(JsonString value);
+ValueTypeCast::ValueTypeCast(JsonObject value);
+ValueTypeCast::ValueTypeCast(JsonArray value);
+ValueTypeCast::~ValueTypeCast(void);
+
+    operator JsonBool();
+    operator JsonNumber();
+    operator JsonString();
+    operator JsonObject();
+    operator JsonArray();
+    operator JsonNull();
+
+    ValueTypeCast& operator=(JsonBool val);
+    ValueTypeCast& operator=(JsonNumber val);
+    ValueTypeCast& operator=(JsonString val);
+    ValueTypeCast& operator=(JsonObject val);
+    ValueTypeCast& operator=(JsonArray val);
+    ValueTypeCast& operator=(JsonNull val);
+
+    ostream& operator<<(ostream &os);
+    bool operator==(const ValueTypeCast& rhs) const;
+    bool operator!=(const ValueTypeCast& rhs) const; 
 
 }

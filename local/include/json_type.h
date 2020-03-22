@@ -175,13 +175,8 @@ public:
     virtual string generate(void) override;
 
     virtual ostream& operator<<(ostream &os) override;
-    // virtual istream& operator>>(istream &is) override;
-    virtual bool operator==(const JsonNull& rhs) const;
-    virtual bool operator!=(const JsonNull& rhs) const;
-
     ValueTypeCast& operator[](size_t key);
     const ValueTypeCast& operator[](const size_t key) const;
-
     bool operator==(const JsonArray& rhs) const;
     bool operator!=(const JsonArray& rhs) const; 
 public:
@@ -216,7 +211,7 @@ public:
     bool operator==(const ValueTypeCast& rhs) const;
     bool operator!=(const ValueTypeCast& rhs) const; 
 
-private:
+public:
     VALUE_TYPE json_value_type_;
     JsonArray json_array_value_;
     JsonObject json_object_value_;
