@@ -79,9 +79,9 @@ public:
     virtual string generate(void) override;
 
     virtual ostream& operator<<(ostream &os) override;
-    // virtual istream& operator>>(istream &is) override;
     virtual bool operator==(const JsonNumber& rhs) const;
     virtual bool operator!=(const JsonNumber& rhs) const;
+    virtual JsonNumber& operator=(JsonNumber rhs);
     operator double();
     operator int();
 
@@ -101,9 +101,9 @@ public:
     virtual string generate(void) override;
 
     virtual ostream& operator<<(ostream &os) override;
-    // virtual istream& operator>>(istream &is) override;
     virtual bool operator==(const JsonBool& rhs) const;
     virtual bool operator!=(const JsonBool& rhs) const;
+    virtual JsonBool& operator=(JsonBool rhs);
     operator bool();
 
 private:
@@ -123,6 +123,7 @@ public:
     // // virtual istream& operator>>(istream &is) override;
     virtual bool operator==(const JsonNull& rhs) const;
     virtual bool operator!=(const JsonNull& rhs) const;
+    virtual JsonNull& operator=(JsonNull rhs);
     operator string();
 
 private:
@@ -142,6 +143,7 @@ public:
     // virtual istream& operator>>(istream &is) override;
     virtual bool operator==(const JsonString& rhs) const;
     virtual bool operator!=(const JsonString& rhs) const;
+    virtual JsonString& operator=(JsonString rhs);
     operator string();
 
 private:
@@ -157,9 +159,9 @@ class JsonObject : public JsonType {
     virtual string generate(void) override;
 
     virtual ostream& operator<<(ostream &os) override;
-    // virtual istream& operator>>(istream &is) override;
     virtual bool operator==(const JsonObject& rhs) const;
     virtual bool operator!=(const JsonObject& rhs) const;
+    virtual JsonObject& operator=(JsonObject rhs);
     ValueTypeCast& operator[](string key);
 
 private:
@@ -179,6 +181,8 @@ public:
     const ValueTypeCast& operator[](const size_t key) const;
     bool operator==(const JsonArray& rhs) const;
     bool operator!=(const JsonArray& rhs) const; 
+    virtual JsonArray& operator=(JsonArray rhs);
+
 public:
     vector<ValueTypeCast> array_val_;
 };
@@ -191,6 +195,7 @@ public:
     ValueTypeCast(JsonString value);
     ValueTypeCast(JsonObject value);
     ValueTypeCast(JsonArray value);
+    ValueTypeCast(JsonNull value);
     ~ValueTypeCast(void);
 
     operator JsonBool();
@@ -206,10 +211,11 @@ public:
     ValueTypeCast& operator=(JsonObject val);
     ValueTypeCast& operator=(JsonArray val);
     ValueTypeCast& operator=(JsonNull val);
+    ValueTypeCast& operator=(ValueTypeCast val);
 
     ostream& operator<<(ostream &os);
     bool operator==(const ValueTypeCast& rhs) const;
-    bool operator!=(const ValueTypeCast& rhs) const; 
+    bool operator!=(const ValueTypeCast& rhs) const;
 
 public:
     VALUE_TYPE json_value_type_;
@@ -218,6 +224,7 @@ public:
     JsonString json_string_value_;
     JsonNumber json_number_value_;
     JsonBool   json_bool_value_;
+    JsonNull json_null_value_;
 };
 
 // class ValueTypeCast {

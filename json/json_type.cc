@@ -143,6 +143,19 @@ JsonNumber::operator int()
     }
 }
 
+JsonNumber& 
+JsonNumber::operator=(JsonNumber rhs)
+{
+    value_type_ = rhs.value_type_;
+    if (value_type_ == INT32_TYPE) {
+        int_value_ = rhs.int_value_;
+    } else if (value_type_ == DOUBLE_TYPE) {
+        double_value_ = rhs.double_value_;
+    }
+
+    return *this;
+}
+
 /////////////////////////////////////////////////////////////////
 
 JsonBool::JsonBool(void)
@@ -218,6 +231,14 @@ JsonBool::operator bool()
     return value_;
 }
 
+JsonBool& 
+JsonBool::operator=(JsonBool rhs)
+{
+    value_ = rhs.value_;
+
+    return *this;
+}
+
 //////////////////////////////////////////////////////////////
 JsonNull::JsonNull(void)
 {
@@ -281,6 +302,13 @@ JsonNull::operator string()
 {
     return value_;
 }
+
+JsonNull& 
+JsonNull::operator=(JsonNull rhs)
+{
+    value_ = rhs.value_;
+}
+
 ///////////////////////////////////////////////////////////
 
 JsonString::JsonString(void) {}
@@ -334,13 +362,23 @@ bool JsonString::operator==(const JsonString& rhs) const
 
     return true;
 }
+
 bool JsonString::operator!=(const JsonString& rhs) const
 {
     return !(*this == rhs);
 }
+
 JsonString::operator string()
 {
     return value_;
+}
+
+JsonString& 
+JsonString::operator=(JsonString rhs)
+{
+    value_ = rhs.value_;
+
+    return *this;
 }
 
 ///////////////////////////////////////////////////////////
@@ -505,6 +543,14 @@ JsonObject::operator[](string key)
     return object_val_[key];
 }
 
+JsonObject& 
+JsonObject::operator=(JsonObject rhs)
+{
+    object_val_ = rhs.object_val_;
+
+    return *this;
+}
+
 ////////////////////////////////////////////////////////////
 
 JsonArray::JsonArray(void){}
@@ -637,37 +683,211 @@ bool JsonArray::operator!=(const JsonArray& rhs) const
     return !(*this == rhs);
 }
 
+JsonArray& 
+JsonArray::operator=(JsonArray rhs)
+{
+    array_val_ = rhs.array_val_;
+
+    return *this;
+}
+
 /////////////////////////////////////////////////////////////////
 
 ValueTypeCast::ValueTypeCast(void) {}
+
 ValueTypeCast::ValueTypeCast(JsonBool value)
     : json_value_type_(BOOL_TYPE), json_bool_value_(value) {}
+    
 ValueTypeCast::ValueTypeCast(JsonNumber value)
     : json_number_value_(value), json_value_type_(NUMBER_TYPE) {}
+
 ValueTypeCast::ValueTypeCast(JsonString value)
     : json_string_value_(value), json_value_type_(STRING_TYPE) {}
+
 ValueTypeCast::ValueTypeCast(JsonObject value)
-    : json_object_value_(value), json_value_type_(JSON_OBJECT_TYPE) {}
+    :json_object_value_(value), json_value_type_(JSON_OBJECT_TYPE) {}
+
 ValueTypeCast::ValueTypeCast(JsonArray value)
-    : json_value_type_(JSON_ARRAY_TYPE), json_array_value_(value) {}
+    : json_array_value_(value), json_value_type_(JSON_ARRAY_TYPE) {}
+
+ValueTypeCast::ValueTypeCast(JsonNull value)
+    : json_null_value_(value), json_value_type_(NULL_TYPE) {}
+
 ValueTypeCast::~ValueTypeCast(void) {}
 
-    operator JsonBool();
-    operator JsonNumber();
-    operator JsonString();
-    operator JsonObject();
-    operator JsonArray();
-    operator JsonNull();
+ValueTypeCast::operator JsonBool()
+{
+    if (json_value_type_ == BOOL_TYPE) {
+        return json_bool_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not bool");
+    }
+}
 
-    ValueTypeCast& operator=(JsonBool val);
-    ValueTypeCast& operator=(JsonNumber val);
-    ValueTypeCast& operator=(JsonString val);
-    ValueTypeCast& operator=(JsonObject val);
-    ValueTypeCast& operator=(JsonArray val);
-    ValueTypeCast& operator=(JsonNull val);
+ValueTypeCast::operator JsonNumber()
+{
+    if (json_value_type_ == NUMBER_TYPE) {
+        return json_number_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not number");
+    }
+}
+ValueTypeCast::operator JsonString()
+{
+    if (json_value_type_ == STRING_TYPE) {
+        return json_string_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not string");
+    }
+}
 
-    ostream& operator<<(ostream &os);
-    bool operator==(const ValueTypeCast& rhs) const;
-    bool operator!=(const ValueTypeCast& rhs) const; 
+ValueTypeCast::operator JsonObject()
+{
+    if (json_value_type_ == JSON_OBJECT_TYPE) {
+        return json_object_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not object");
+    }
+}
+ValueTypeCast::operator JsonArray()
+{
+    if (json_value_type_ == JSON_OBJECT_TYPE) {
+        return json_array_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not array");
+    }
+}
+
+ValueTypeCast::operator JsonNull()
+{
+    if (json_value_type_ == NULL_TYPE) {
+        return json_null_value_;
+    } else {
+        throw runtime_error("value cast faled: current type is not null");
+    }
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonBool val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_bool_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonNumber val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_number_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonString val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_string_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonObject val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_object_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonArray val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_array_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(JsonNull val)
+{
+    json_value_type_ = BOOL_TYPE;
+    json_null_value_ = val;
+
+    return *this;
+}
+
+ValueTypeCast& 
+ValueTypeCast::operator=(ValueTypeCast val)
+{
+    json_value_type_ = val.json_value_type_;
+    json_bool_value_ = val;
+    json_null_value_ = val;
+    json_array_value_ = val;
+    json_object_value_ = val;
+    json_string_value_ = val;
+    json_string_value_ = val;
+
+    return *this;
+}
+
+ostream& 
+ValueTypeCast::operator<<(ostream &os)
+{
+    switch (json_value_type_)
+    {
+    case NULL_TYPE:
+        os << json_null_value_;
+        break;
+    case NUMBER_TYPE:
+        os << json_number_value_;
+        break;
+    case STRING_TYPE:
+        os << json_string_value_;
+        break;
+    case BOOL_TYPE:
+        os << json_bool_value_;
+        break;
+    case JSON_ARRAY_TYPE:
+        os << json_array_value_;
+        break;
+    case  JSON_OBJECT_TYPE:
+        os << json_object_value_;
+        break;
+    default:
+        os << "NONE TYPE";
+        break;
+    }
+}
+bool ValueTypeCast::operator==(const ValueTypeCast& rhs) const
+{
+       switch (json_value_type_)
+    {
+    case NULL_TYPE:
+        return json_null_value_ == rhs.json_null_value_;
+    case NUMBER_TYPE:
+        return json_number_value_ == rhs.json_number_value_;
+    case STRING_TYPE:
+        return json_string_value_ == rhs.json_string_value_;
+    case BOOL_TYPE:
+        return json_bool_value_ == rhs.json_bool_value_;
+    case JSON_ARRAY_TYPE:
+        return json_array_value_ == rhs.json_array_value_;
+    case  JSON_OBJECT_TYPE:
+        return json_object_value_ == rhs.json_object_value_;
+    default:
+        break;
+    }
+
+    return true;
+}
+bool ValueTypeCast::operator!=(const ValueTypeCast& rhs) const
+{
+    return !(*this == rhs);
+}
 
 }
