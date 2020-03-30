@@ -1,6 +1,45 @@
 {
-    "name": "rjf12138",
-    "age": 25,
-    "height": 171.2,
-    "weight": 50.3
-}
+    "_id": "5e820fdc92050fcf25ffbb10",
+    "index": 0,
+    "guid": "5e601c02-b89d-4744-b12c-7b6c9bee57ff",
+    "isActive": true,
+    "balance": "$2,063.88",
+    "picture": "http://placehold.it/32x32",
+    "age": 38,
+    "eyeColor": "green",
+    "name": "Ball Mccoy",
+    "gender": "male",
+    "company": "SYBIXTEX",
+    "email": "ballmccoy@sybixtex.com",
+    "phone": "+1 (880) 591-3648",
+    "address": "827 Moultrie Street, Williams, Mississippi, 8917",
+    "about": "Duis cillum adipisicing amet aute ullamco ea aute ex velit culpa nisi nulla. Eiusmod eiusmod commodo mollit ut laboris. Non sint cillum id dolore dolor qui eu adipisicing labore. Amet ut sunt cillum aute veniam. Aliquip ex reprehenderit sunt esse laboris magna exercitation mollit. Officia reprehenderit nisi aliquip adipisicing consequat nostrud elit irure ea sit. Ut velit exercitation Lorem consectetur sint eiusmod nulla duis pariatur tempor minim.\r\n",
+    "registered": "2017-09-05T03:40:43 -08:00",
+    "latitude": 45.797475,
+    "longitude": -90.466906,
+    "tags": [
+      "id",
+      "ullamco",
+      "ut",
+      "incididunt",
+      "aliquip",
+      "aliqua",
+      "nulla"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Susie Barr"
+      },
+      {
+        "id": 1,
+        "name": "Callie Strickland"
+      },
+      {
+        "id": 2,
+        "name": "Shanna Johns"
+      }
+    ],
+    "greeting": "Hello, Ball Mccoy! You have 5 unread messages.",
+    "favoriteFruit": "banana"
+  }

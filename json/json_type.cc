@@ -58,6 +58,13 @@ JsonNumber::JsonNumber(int32_t val)
 {
 
 }
+
+JsonNumber::JsonNumber(const JsonNumber& val)
+: value_type_(val.value_type_), int_value_(val.int_value_), double_value_(val.double_value_)
+{
+
+}
+
 JsonNumber::~JsonNumber(void) {}
 
 ByteBuffer_Iterator 
@@ -128,21 +135,7 @@ JsonNumber::generate(void)
 ostream& 
 JsonNumber::operator<<(ostream &os)
 {
-    switch (value_type_)
-    {
-        case DOUBLE_TYPE:
-        {
-            os << double_value_;
-        } break;
-        case INT32_TYPE:
-        {
-            os << int_value_;
-        } break;
-        default:
-        {
-            os << "0";
-        } break;
-    }
+    os << this->generate();
 
     return os;
 }
@@ -388,13 +381,15 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 string 
 JsonString::generate(void)
 {
-    return value_;
+    string str = "\"";
+    str += value_ + "\"";
+    return str;
 }
 
 ostream& 
 JsonString::operator<<(ostream &os)
 {
-    os << value_;
+    os << this->generate();
 
     return os;
 }
@@ -513,10 +508,6 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 
     if (iter != json_end_pos && *iter == '}') {
         ++iter;
-    } else {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Object does not end with '}'";
-        throw runtime_error(ostr.str());
     }
 
     return iter;
@@ -535,7 +526,7 @@ JsonObject::generate(void)
         }
         output_obj << iter->first;
         output_obj << ": ";
-        output_obj << iter->second.generate();
+        output_obj << (iter->second).generate();
     }
     output_obj << "\n}";
 
@@ -758,7 +749,7 @@ ValueTypeCast::ValueTypeCast(JsonArray value)
 ValueTypeCast::ValueTypeCast(JsonNull value)
     : json_null_value_(value), json_value_type_(JSON_NULL_TYPE) {}
 
-ValueTypeCast::ValueTypeCast(ValueTypeCast &value)
+ValueTypeCast::ValueTypeCast(const ValueTypeCast &value)
     : json_value_type_(value.json_value_type_),
       json_array_value_(value.json_array_value_),
       json_bool_value_(value.json_bool_value_),
@@ -817,7 +808,7 @@ ValueTypeCast::operator JsonNull()
     if (json_value_type_ == JSON_NULL_TYPE) {
         return json_null_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not null");
+        throw runtime_error("value cast failed: current type is not null");
     }
 }
 
@@ -833,7 +824,7 @@ ValueTypeCast::operator=(JsonBool val)
 ValueTypeCast& 
 ValueTypeCast::operator=(JsonNumber val)
 {
-    json_value_type_ = JSON_BOOL_TYPE;
+    json_value_type_ = JSON_NUMBER_TYPE;
     json_number_value_ = val;
 
     return *this;
@@ -842,7 +833,7 @@ ValueTypeCast::operator=(JsonNumber val)
 ValueTypeCast& 
 ValueTypeCast::operator=(JsonString val)
 {
-    json_value_type_ = JSON_BOOL_TYPE;
+    json_value_type_ = JSON_STRING_TYPE;
     json_string_value_ = val;
 
     return *this;
@@ -851,7 +842,7 @@ ValueTypeCast::operator=(JsonString val)
 ValueTypeCast& 
 ValueTypeCast::operator=(JsonObject val)
 {
-    json_value_type_ = JSON_BOOL_TYPE;
+    json_value_type_ = JSON_OBJECT_TYPE;
     json_object_value_ = val;
 
     return *this;
@@ -860,7 +851,7 @@ ValueTypeCast::operator=(JsonObject val)
 ValueTypeCast& 
 ValueTypeCast::operator=(JsonArray val)
 {
-    json_value_type_ = JSON_BOOL_TYPE;
+    json_value_type_ = JSON_ARRAY_TYPE;
     json_array_value_ = val;
 
     return *this;
@@ -869,7 +860,7 @@ ValueTypeCast::operator=(JsonArray val)
 ValueTypeCast& 
 ValueTypeCast::operator=(JsonNull val)
 {
-    json_value_type_ = JSON_BOOL_TYPE;
+    json_value_type_ = JSON_NULL_TYPE;
     json_null_value_ = val;
 
     return *this;
@@ -879,12 +870,12 @@ ValueTypeCast&
 ValueTypeCast::operator=(ValueTypeCast val)
 {
     json_value_type_ = val.json_value_type_;
-    json_bool_value_ = val;
-    json_null_value_ = val;
-    json_array_value_ = val;
-    json_object_value_ = val;
-    json_string_value_ = val;
-    json_string_value_ = val;
+    json_bool_value_ = val.json_bool_value_;
+    json_null_value_ = val.json_null_value_;
+    json_array_value_ = val.json_array_value_;
+    json_object_value_ = val.json_object_value_;
+    json_string_value_ = val.json_string_value_;
+    json_number_value_ = val.json_number_value_;
 
     return *this;
 }

@@ -48,6 +48,14 @@ WeJson::write_json(string json_file_path)
 }
 
 int 
+WeJson::parser_from_json(string str)
+{
+    raw_json_buffer_.clear();
+    raw_json_buffer_.write_bytes(str.c_str(), str.length());
+    return this->parser_from_json(raw_json_buffer_);
+}
+
+int 
 WeJson::parser_from_json(ByteBuffer &buff)
 {
     bool quotation_marks = false;
@@ -69,7 +77,7 @@ WeJson::parser_from_json(ByteBuffer &buff)
         simplify_json_buffer_.write_int8(*iter);
     }
     auto begin_json = simplify_json_buffer_.begin();
-    auto end_json = simplify_json_buffer_.begin();
+    auto end_json = simplify_json_buffer_.end();
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
         json_value_.json_array_value_.parse(begin_json, end_json);

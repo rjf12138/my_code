@@ -38,6 +38,7 @@ public:
     JsonNumber(void);
     JsonNumber(double val);
     JsonNumber(int32_t val);
+    JsonNumber(const JsonNumber& val);
     ~JsonNumber(void);
 
     virtual ByteBuffer_Iterator parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos) override;
@@ -160,7 +161,7 @@ public:
     ValueTypeCast(JsonObject value);
     ValueTypeCast(JsonArray value);
     ValueTypeCast(JsonNull value);
-    ValueTypeCast(ValueTypeCast &value); // 只能使用引用不然会报错
+    ValueTypeCast(const ValueTypeCast& value); // 只能使用引用不然会报错
     ~ValueTypeCast(void);
 
     operator JsonBool();

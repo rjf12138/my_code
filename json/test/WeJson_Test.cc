@@ -93,7 +93,7 @@ protected:
 //     }
 // }
 
-TEST_F(WeJson_Test, basi_test) 
+TEST_F(WeJson_Test, basic_test) 
 {
     WeJson json;
     json.open_json("/home/ruanjian/workspace/project/my_code/build/json/test/bin/json_text/test.json");
