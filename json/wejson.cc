@@ -78,6 +78,7 @@ WeJson::parser_from_json(ByteBuffer &buff)
     }
     auto begin_json = simplify_json_buffer_.begin();
     auto end_json = simplify_json_buffer_.end();
+
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
         json_value_.json_array_value_.parse(begin_json, end_json);

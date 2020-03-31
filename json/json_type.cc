@@ -113,7 +113,7 @@ JsonNumber::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonNumber::generate(void)
+JsonNumber::generate(char ctrl_ch)
 {
     switch (value_type_)
     {
@@ -236,7 +236,7 @@ JsonBool::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
 }
 
 string 
-JsonBool::generate(void)
+JsonBool::generate(char ctrl_ch)
 {
     return value_ == true? "true":"false";
 }
@@ -310,7 +310,7 @@ JsonNull::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
 }
 
 string 
-JsonNull::generate(void)
+JsonNull::generate(char ctrl_ch)
 {
     return value_;
 }
@@ -379,7 +379,7 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonString::generate(void)
+JsonString::generate(char ctrl_ch)
 {
     string str = "\"";
     str += value_ + "\"";
@@ -500,35 +500,44 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
             object_val_[value_name] = vtc;
         } else {
             ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " There's already " << value_name << " exists.";
+            ostr << "Line: " << __LINE__ << " There's already \"" << value_name << "\" exists.";
             throw runtime_error(ostr.str());
         }
         flag = false;
+        if (*iter == '}') { // 有些解析玩就直接指向'}'， 如果不退出在回到循环会因值自增错过
+            break;
+        }
     }
 
     if (iter != json_end_pos && *iter == '}') {
         ++iter;
     }
-
+    
     return iter;
 }
 
 string 
-JsonObject::generate(void)
+JsonObject::generate(char ctrl_ch)
 {
     ostringstream output_obj;
-    output_obj << "{";
+    output_obj << ctrl_ch << "{";
     for (auto iter = object_val_.begin(); iter != object_val_.end(); ++iter) {
         if (iter != object_val_.begin()) {
             output_obj << ",\n\t";
         } else {
             output_obj << "\n\t";
         }
-        output_obj << iter->first;
+
+        output_obj << ctrl_ch << iter->first;
         output_obj << ": ";
-        output_obj << (iter->second).generate();
+        if (iter->second.json_value_type_ == JSON_ARRAY_TYPE ||
+                iter->second.json_value_type_ == JSON_OBJECT_TYPE) {
+            output_obj << (iter->second).generate('k');
+        } else {
+            output_obj << (iter->second).generate();
+        }
     }
-    output_obj << "\n}";
+    output_obj << "\n" << ctrl_ch << "}";
 
     return output_obj.str();
 }
@@ -651,9 +660,9 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         default:
             break;
         }
-
+        
         array_val_.push_back(vtc);
-        if (*iter == ']') {
+        if (*iter == ']') { // 有些解析玩就直接指向'】'， 如果不退出在回到循环会因值自增错过
             break;
         }
     }
@@ -666,20 +675,26 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
     return iter;
 }
 string 
-JsonArray::generate(void)
+JsonArray::generate(char ctrl_ch)
 {
     ostringstream ostr;
-    ostr << "[";
+    ostr << ctrl_ch << "[";
     for (int i = 0; i < array_val_.size(); ++i) {
         if (i != 0) { // 每输出一个类型后跟一个','
             ostr << ",\n\t";
         } else {
             ostr << "\n\t";
         }
-        ostr << array_val_[i].generate();
+        if (array_val_[i].json_value_type_ == JSON_ARRAY_TYPE ||
+                array_val_[i].json_value_type_ == JSON_OBJECT_TYPE) {
+            ostr << ctrl_ch << array_val_[i].generate('k');
+        } else {
+            ostr << ctrl_ch << array_val_[i].generate();
+        }
     }
 
-    ostr << "\n]";
+    ostr << ctrl_ch << "\n]";
+    return ostr.str();
 }
 
 ostream& 
@@ -755,7 +770,8 @@ ValueTypeCast::ValueTypeCast(const ValueTypeCast &value)
       json_bool_value_(value.json_bool_value_),
       json_null_value_(value.json_null_value_),
       json_number_value_(value.json_number_value_),
-      json_string_value_(value.json_string_value_)
+      json_string_value_(value.json_string_value_),
+      json_object_value_(value.json_object_value_)
 {}
 
 ValueTypeCast::~ValueTypeCast(void) {}
@@ -938,22 +954,22 @@ bool ValueTypeCast::operator!=(const ValueTypeCast& rhs) const
     return !(*this == rhs);
 }
 
-string ValueTypeCast::generate(void)
+string ValueTypeCast::generate(char ctrl_ch)
 {
     switch (json_value_type_)
     {
     case JSON_NULL_TYPE:
-        return json_null_value_.generate();
+        return json_null_value_.generate(ctrl_ch);
     case JSON_NUMBER_TYPE:
-        return json_number_value_.generate();
+        return json_number_value_.generate(ctrl_ch);
     case JSON_STRING_TYPE:
-        return json_string_value_.generate();
+        return json_string_value_.generate(ctrl_ch);
     case JSON_BOOL_TYPE:
-        return json_bool_value_.generate();
+        return json_bool_value_.generate(ctrl_ch);
     case JSON_ARRAY_TYPE:
-        return json_array_value_.generate();
+        return json_array_value_.generate(ctrl_ch);
     case  JSON_OBJECT_TYPE:
-        return json_object_value_.generate();
+        return json_object_value_.generate(ctrl_ch);
     default:
         break;
     }
