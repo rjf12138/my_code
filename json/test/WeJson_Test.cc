@@ -26,7 +26,7 @@ protected:
 TEST_F(WeJson_Test, NUMBER_TEST)
 {
     WeJson json;
-    json.open_json("/home/ruanjian/workspace/project/my_code/json/test/json_text/array.json");
+    json.open_json("/home/ruanjian/workspace/project/my_code/json/test/json_text/test.json");
     cout << json.generate_to_json() << std::endl;
 }
 

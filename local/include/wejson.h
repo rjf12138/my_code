@@ -24,8 +24,6 @@ public:
     ValueTypeCast& operator[](int key);
 
 public:
-    ByteBuffer raw_json_buffer_;
-    ByteBuffer simplify_json_buffer_;
     ValueTypeCast json_value_;
     const vector<char> sperate_chars = {' ', '\r', '\n','\t','{', '}','[', ']',',',':','"'};
 };

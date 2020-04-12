@@ -113,7 +113,7 @@ JsonNumber::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonNumber::generate(char ctrl_ch)
+JsonNumber::generate(string ctrl_ch)
 {
     switch (value_type_)
     {
@@ -236,7 +236,7 @@ JsonBool::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
 }
 
 string 
-JsonBool::generate(char ctrl_ch)
+JsonBool::generate(string ctrl_ch)
 {
     return value_ == true? "true":"false";
 }
@@ -310,7 +310,7 @@ JsonNull::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
 }
 
 string 
-JsonNull::generate(char ctrl_ch)
+JsonNull::generate(string ctrl_ch)
 {
     return value_;
 }
@@ -379,7 +379,7 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonString::generate(char ctrl_ch)
+JsonString::generate(string ctrl_ch)
 {
     string str = "\"";
     str += value_ + "\"";
@@ -517,22 +517,21 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonObject::generate(char ctrl_ch)
+JsonObject::generate(string ctrl_ch)
 {
     ostringstream output_obj;
-    output_obj << ctrl_ch << "{";
+    output_obj << "{";
     for (auto iter = object_val_.begin(); iter != object_val_.end(); ++iter) {
         if (iter != object_val_.begin()) {
-            output_obj << ",\n\t";
-        } else {
-            output_obj << "\n\t";
+            output_obj << ",";
         }
 
-        output_obj << ctrl_ch << iter->first;
+        output_obj << "\n\t" << ctrl_ch << iter->first;
         output_obj << ": ";
         if (iter->second.json_value_type_ == JSON_ARRAY_TYPE ||
                 iter->second.json_value_type_ == JSON_OBJECT_TYPE) {
-            output_obj << (iter->second).generate('k');
+            string next_ctrl = ctrl_ch + "\t";
+            output_obj << (iter->second).generate(next_ctrl);
         } else {
             output_obj << (iter->second).generate();
         }
@@ -675,25 +674,26 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
     return iter;
 }
 string 
-JsonArray::generate(char ctrl_ch)
+JsonArray::generate(string ctrl_ch)
 {
     ostringstream ostr;
-    ostr << ctrl_ch << "[";
+    ostr << "[";
     for (int i = 0; i < array_val_.size(); ++i) {
         if (i != 0) { // 每输出一个类型后跟一个','
-            ostr << ",\n\t";
+            ostr << ",\n" << ctrl_ch;
         } else {
-            ostr << "\n\t";
+            ostr << "\n" << ctrl_ch;
         }
         if (array_val_[i].json_value_type_ == JSON_ARRAY_TYPE ||
                 array_val_[i].json_value_type_ == JSON_OBJECT_TYPE) {
-            ostr << ctrl_ch << array_val_[i].generate('k');
+            string next_ctrl = ctrl_ch + "\t";
+            ostr << ctrl_ch << array_val_[i].generate(next_ctrl);
         } else {
             ostr << ctrl_ch << array_val_[i].generate();
         }
     }
 
-    ostr << ctrl_ch << "\n]";
+    ostr << "\n" << ctrl_ch << "]";
     return ostr.str();
 }
 
@@ -954,7 +954,7 @@ bool ValueTypeCast::operator!=(const ValueTypeCast& rhs) const
     return !(*this == rhs);
 }
 
-string ValueTypeCast::generate(char ctrl_ch)
+string ValueTypeCast::generate(string ctrl_ch)
 {
     switch (json_value_type_)
     {

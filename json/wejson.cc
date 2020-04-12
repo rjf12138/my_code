@@ -22,10 +22,11 @@ WeJson::open_json(string json_file_path)
         throw runtime_error(ostr.str());
     }
 
+    ByteBuffer raw_json_buffer;
     struct stat file_info;
     off_t file_size = json_file.fileinfo(file_info);
-    json_file.read(raw_json_buffer_, file_info.st_size);
-    this->parser_from_json(raw_json_buffer_);
+    json_file.read(raw_json_buffer, file_info.st_size);
+    this->parser_from_json(raw_json_buffer);
 
     return 0;
 }
@@ -50,14 +51,16 @@ WeJson::write_json(string json_file_path)
 int 
 WeJson::parser_from_json(string str)
 {
-    raw_json_buffer_.clear();
-    raw_json_buffer_.write_bytes(str.c_str(), str.length());
-    return this->parser_from_json(raw_json_buffer_);
+    ByteBuffer raw_json_buffer;
+    raw_json_buffer.clear();
+    raw_json_buffer.write_bytes(str.c_str(), str.length());
+    return this->parser_from_json(raw_json_buffer);
 }
 
 int 
 WeJson::parser_from_json(ByteBuffer &buff)
 {
+    ByteBuffer simple_json_text;
     bool quotation_marks = false;
     int i = 0;
     for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
@@ -74,10 +77,10 @@ WeJson::parser_from_json(ByteBuffer &buff)
         if (i < 4 && quotation_marks == false) {
             continue;
         }
-        simplify_json_buffer_.write_int8(*iter);
+        simple_json_text.write_int8(*iter);
     }
-    auto begin_json = simplify_json_buffer_.begin();
-    auto end_json = simplify_json_buffer_.end();
+    auto begin_json = simple_json_text.begin();
+    auto end_json = simple_json_text.end();
 
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
