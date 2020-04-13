@@ -62,11 +62,13 @@ WeJson::parser_from_json(ByteBuffer &buff)
 {
     ByteBuffer simple_json_text;
     bool quotation_marks = false;
+    ByteBuffer_Iterator tmp_pos = buff.begin();
     int i = 0;
     for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
         if (quotation_marks == false && *iter == '"') {
+            tmp_pos = iter;
             quotation_marks = true;
-        } else if (quotation_marks == true && *iter == '"' && *(iter-1) != '\\') {
+        } else if (quotation_marks == true && *iter == '"' && *(iter-1) != '\\' && *(iter-2) != '\\') {
             quotation_marks = false;
         }
         for (i = 0; i < 4; ++i) {
@@ -77,6 +79,13 @@ WeJson::parser_from_json(ByteBuffer &buff)
         if (i < 4 && quotation_marks == false) {
             continue;
         }
+        else if (i < 4 && quotation_marks == true) {
+            for (; tmp_pos != iter; ++tmp_pos) {
+                std::cerr << *tmp_pos;
+            }
+            std::cerr << std::endl << std::endl;;
+        }
+        /*std::cerr << *iter << "(" << (int)*iter << "i:" << quotation_marks << ")"*/;
         simple_json_text.write_int8(*iter);
     }
     auto begin_json = simple_json_text.begin();

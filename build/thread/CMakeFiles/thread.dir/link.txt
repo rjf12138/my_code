@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../local/lib/libthread.a  CMakeFiles/thread.dir/mutex.cc.o CMakeFiles/thread.dir/thread.cc.o
+/usr/bin/ranlib ../../local/lib/libthread.a

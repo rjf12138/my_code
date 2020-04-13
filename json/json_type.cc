@@ -611,6 +611,11 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',') {
+                std::cout << "value: " << *iter << std::endl;
+                for (auto s = iter; s != iter+15; ++s) {
+                    std::cout << *s;
+                }
+                std::cout << std::endl;
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in array: " << *iter;
                 throw runtime_error(ostr.str());

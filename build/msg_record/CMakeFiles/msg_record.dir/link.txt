@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../local/lib/libmsg_record.a  CMakeFiles/msg_record.dir/msg_record.cc.o
+/usr/bin/ranlib ../../local/lib/libmsg_record.a

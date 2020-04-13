@@ -1,0 +1,16 @@
+{
+    "friends": [
+        {
+          "id": 0,
+          "name": "Susie Barr"
+        },
+        {
+          "id": 1,
+          "name": "Callie Strickland"
+        },
+        {
+          "id": 2,
+          "name": "Shanna Johns"
+        }
+      ]
+}

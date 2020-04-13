@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../local/lib/libwejson.a  CMakeFiles/wejson.dir/wejson.cc.o CMakeFiles/wejson.dir/json_type.cc.o
+/usr/bin/ranlib ../../local/lib/libwejson.a

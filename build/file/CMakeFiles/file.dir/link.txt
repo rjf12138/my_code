@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../local/lib/libfile.a  CMakeFiles/file.dir/file.cc.o
+/usr/bin/ranlib ../../local/lib/libfile.a
