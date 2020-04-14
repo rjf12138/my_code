@@ -19,17 +19,18 @@ public:
     MsgRecord(void);
     virtual ~MsgRecord(void);
 
-    static void get_msg_info(int line, string file_name, const char *format, ...);
-    static void get_msg_info(int line, string file_name, const string &msg);
-    static MsgContent get_all_msg(void) {return msg_info_;}
+    virtual string debug_info(void) {} // 用它来记录错误发生时的信息
 
-    static void print_msg(void);
+    void get_msg_info(int line, string file_name, const char *format, ...);
+    void get_msg_info(int line, string file_name, const string &msg);
+    MsgContent get_all_msg(void) {return msg_info_;}
+
+    void print_msg(void);
 private:
-    static MsgContent msg_info_;
+    MsgContent msg_info_;
 };
 
-#define get_msg(...)         MsgRecord::get_msg_info(__LINE__, __FILE__,__VA_ARGS__)
-#define print_msg()          MsgRecord::print_msg()
+#define get_msg(...)         this->get_msg_info(__LINE__, __FILE__,__VA_ARGS__)
 
 }
 

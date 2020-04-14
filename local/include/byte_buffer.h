@@ -136,7 +136,8 @@ public:
     {
         if (curr_pos_ == buff_.start_write_pos_) {
             ostringstream ostr;
-            ostr << "Line: " << __LINE__ << "ByteBuffer_Iterator operator+ out of range.";
+            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator+ out of range.";
+            ostr << "debug_info: " << this->debug_info() << std::endl;
             throw runtime_error(ostr.str());
         }
         return buff_.buffer_[curr_pos_];
@@ -280,6 +281,19 @@ public:
         return *this;
     }
     
+    string debug_info(void) {
+        ostringstream ostr;
+
+        ostr << std::endl << "--------------debug_info-----------------------" << std::endl;
+        ostr << "curr_pos: " << curr_pos_ << std::endl;
+        ostr << "begin_pos: " << buff_.begin().curr_pos_ << std::endl;
+        ostr << "end_pos: " << buff_.end().curr_pos_ << std::endl;
+        ostr << "buff_length: "  << buff_.data_size() << std::endl;
+        ostr << "------------------------------------------------" << std::endl;
+
+        return ostr.str();
+    }
+
 private:
     ByteBuffer &buff_;
     int32_t curr_pos_;

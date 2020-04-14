@@ -24,6 +24,8 @@ public:
     ValueTypeCast& operator[](string key);
     ValueTypeCast& operator[](int key);
 
+    string debug_info(void);
+
 public:
     ValueTypeCast json_value_;
     const vector<char> sperate_chars = {' ', '\r', '\n','\t','{', '}','[', ']',',',':','"'};

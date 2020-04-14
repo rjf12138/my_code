@@ -360,9 +360,13 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
     ++iter; // 此时 *iter 值为 ",指向字符串的第一个字符
     string str;
     for (; iter != json_end_pos; ++iter) {
-        if (*iter == '"' && *(iter - 1) != '\\') {
+        if (*iter == '\\') { 
+            str += *iter;
+            ++iter; // '\' 为转义字符下一个字符不做解析
+            str += *iter;
+        } else if (*iter == '"') {
             break;
-        }
+        }   
         str += *iter;
     }
 
@@ -374,7 +378,6 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
     }
     value_ = str;
     ++iter; //  iter 指向下一个字符
-
     return iter;
 }
 
@@ -437,7 +440,12 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
     for (; iter != json_end_pos && *iter != '}'; ++iter) {
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
+            std::cout << "value: " << *iter << std::endl;
             if (*iter != ',' && *iter != ':' && *iter != ']') {
+                for (auto tmp = iter; tmp != json_end_pos && tmp != iter + 338; ++tmp) {
+                    std::cout << *tmp;
+                }
+                std::cout << std::endl;
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in object: " << *iter;
                 throw runtime_error(ostr.str());
@@ -611,18 +619,18 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',') {
-                std::cout << "value: " << *iter << std::endl;
-                for (auto s = iter; s != iter+15; ++s) {
-                    std::cout << *s;
+                ostringstream ostr;
+                for (auto tmp = iter -3; tmp != json_end_pos && tmp != iter +38; ++tmp) {
+                    std::cout << *tmp;
                 }
                 std::cout << std::endl;
-                ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in array: " << *iter;
                 throw runtime_error(ostr.str());
             }
             continue;
         }
         ValueTypeCast vtc;
+        std::cout << "pointer_start_ch: " << *iter << std::endl;
         switch (ret_value_type)
         {
             case JSON_OBJECT_TYPE:
@@ -666,7 +674,8 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         }
         
         array_val_.push_back(vtc);
-        if (*iter == ']') { // 有些解析玩就直接指向'】'， 如果不退出在回到循环会因值自增错过
+        std::cout << "pointer_end_ch: " << *iter << " last_type: " << ret_value_type << std::endl;
+        if (iter != json_end_pos && *iter == ']') { // 有些解析玩就直接指向']'， 如果不退出在回到循环会因值自增错过
             break;
         }
     }

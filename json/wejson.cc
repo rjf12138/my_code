@@ -68,8 +68,15 @@ WeJson::parser_from_json(ByteBuffer &buff)
         if (quotation_marks == false && *iter == '"') {
             tmp_pos = iter;
             quotation_marks = true;
-        } else if (quotation_marks == true && *iter == '"' && *(iter-1) != '\\' && *(iter-2) != '\\') {
-            quotation_marks = false;
+        }
+        if (quotation_marks == true) {
+            if (*iter == '\\'){ 
+                simple_json_text.write_int8(*iter);
+                ++iter; // '\' 为转义字符下一个字符不做解析
+                simple_json_text.write_int8(*iter);
+            } else if (*iter == '"') {
+                quotation_marks = false;
+            }
         }
         for (i = 0; i < 4; ++i) {
             if (sperate_chars[i] == *iter) {
@@ -79,17 +86,15 @@ WeJson::parser_from_json(ByteBuffer &buff)
         if (i < 4 && quotation_marks == false) {
             continue;
         }
-        else if (i < 4 && quotation_marks == true) {
-            for (; tmp_pos != iter; ++tmp_pos) {
-                std::cerr << *tmp_pos;
-            }
-            std::cerr << std::endl << std::endl;;
-        }
-        /*std::cerr << *iter << "(" << (int)*iter << "i:" << quotation_marks << ")"*/;
         simple_json_text.write_int8(*iter);
     }
     auto begin_json = simple_json_text.begin();
     auto end_json = simple_json_text.end();
+
+    // for (auto tmp = begin_json; tmp != end_json; ++tmp) {
+    //     std::cout << *tmp;
+    // }
+    // std::cout << endl;
 
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
