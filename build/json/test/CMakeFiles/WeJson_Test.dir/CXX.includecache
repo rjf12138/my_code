@@ -376,10 +376,6 @@ basic_head.h
 byte_buffer.h
 ../local/include/byte_buffer.h
 
-../local/include/msg_record.h
-basic_head.h
-../local/include/basic_head.h
-
 ../local/include/mutex.h
 basic_head.h
 ../local/include/basic_head.h
@@ -393,8 +389,6 @@ file.h
 ../local/include/file.h
 json_type.h
 ../local/include/json_type.h
-msg_record.h
-../local/include/msg_record.h
 
 /home/ruanjian/workspace/project/my_code/json/test/WeJson_Test.cc
 wejson.h

@@ -27,10 +27,13 @@ MsgRecord::get_msg_info(int occur_line, string occur_file, const char *format, .
     time_t curr_time = time(NULL);
     strftime(strtime, sizeof(strtime), "%Y-%m-%d %H:%M:%S", localtime(&curr_time));
 
-    msg_info_.when = strtime;
-    msg_info_.msg_info = msg_buff;
-    msg_info_.which_line = occur_line;
-    msg_info_.which_file = basename(occur_file.c_str());
+    MsgContent tmp_msg;
+    tmp_msg.when = strtime;
+    tmp_msg.msg_info = msg_buff;
+    tmp_msg.which_line = occur_line;
+    tmp_msg.which_file = basename(occur_file.c_str());
+    msg_info_.push_back(tmp_msg);
+
     delete msg_buff;
 
     return ;
@@ -43,17 +46,28 @@ MsgRecord::get_msg_info(int occur_line, string occur_file, const string &msg)
     time_t curr_time = time(NULL);
     strftime(strtime, sizeof(strtime), "%Y-%m-%d %H:%M:%S", localtime(&curr_time));
     
-    msg_info_.when = strtime;
-    msg_info_.msg_info = msg;
-    msg_info_.which_line = occur_line;
-    msg_info_.which_file = basename(occur_file.c_str());
+    MsgContent tmp_msg;
+    tmp_msg.when = strtime;
+    tmp_msg.msg_info = msg;
+    tmp_msg.which_line = occur_line;
+    tmp_msg.which_file = basename(occur_file.c_str());
+    msg_info_.push_back(tmp_msg);
+
+    return ;
 }
 
-void
-MsgRecord::print_msg()
+string
+MsgRecord::output_msg()
 {
-    std::cout << msg_info_.which_line << std::endl;
-    std::cout << msg_info_.msg_info << std::endl;
+    ostringstream ostr;
+    for (int i = 0; i < msg_info_.size(); ++i) {
+        ostr << "[" << msg_info_[i].when << "]";
+        ostr << "[" << msg_info_[i].which_line << "]";
+        ostr << "[" << msg_info_[i].which_file << "] ";
+        ostr << msg_info_[i].msg_info << std::endl;
+    }
+
+    return ostr.str();
 }
 
 }

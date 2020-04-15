@@ -26,7 +26,6 @@ json/test/CMakeFiles/WeJson_Test.dir/WeJson_Test.cc.o
  ../local/include/gtest/internal/gtest-string.h
  ../local/include/gtest/internal/gtest-type-util.h
  ../local/include/json_type.h
- ../local/include/msg_record.h
  ../local/include/mutex.h
  ../local/include/wejson.h
  /home/ruanjian/workspace/project/my_code/json/test/WeJson_Test.cc

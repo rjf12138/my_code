@@ -12,7 +12,6 @@ json/CMakeFiles/wejson.dir/wejson.cc.o
  ../local/include/byte_buffer.h
  ../local/include/file.h
  ../local/include/json_type.h
- ../local/include/msg_record.h
  ../local/include/mutex.h
  ../local/include/wejson.h
  /home/ruanjian/workspace/project/my_code/json/wejson.cc

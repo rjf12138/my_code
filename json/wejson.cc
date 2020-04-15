@@ -91,11 +91,6 @@ WeJson::parser_from_json(ByteBuffer &buff)
     auto begin_json = simple_json_text.begin();
     auto end_json = simple_json_text.end();
 
-    // for (auto tmp = begin_json; tmp != end_json; ++tmp) {
-    //     std::cout << *tmp;
-    // }
-    // std::cout << endl;
-
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
         json_value_.json_array_value_.parse(begin_json, end_json);

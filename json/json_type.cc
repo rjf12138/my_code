@@ -41,6 +41,23 @@ JsonType::check_value_type(ByteBuffer_Iterator &iter)
         return UNKNOWN_TYPE;
     }
 
+string 
+JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos,  int range, ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos)
+{
+    ostringstream ostr;
+
+    auto pos = value_curr_pos;
+    for (int i = 0; i < range; ++i) {
+        if (value_curr_pos == json_end_pos) {
+            return "end of json.";
+        }
+        ostr << *pos;
+        ++pos;
+    }
+    
+    return ostr.str();
+}
+
 ///////////////////////////////////////////////////////////
 
 JsonNumber::JsonNumber(void)
@@ -440,12 +457,7 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
     for (; iter != json_end_pos && *iter != '}'; ++iter) {
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
-            std::cout << "value: " << *iter << std::endl;
             if (*iter != ',' && *iter != ':' && *iter != ']') {
-                for (auto tmp = iter; tmp != json_end_pos && tmp != iter + 338; ++tmp) {
-                    std::cout << *tmp;
-                }
-                std::cout << std::endl;
                 ostringstream ostr;
                 ostr << "Line: " << __LINE__ << " Unknown character in object: " << *iter;
                 throw runtime_error(ostr.str());
@@ -620,17 +632,12 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',') {
                 ostringstream ostr;
-                for (auto tmp = iter -3; tmp != json_end_pos && tmp != iter +38; ++tmp) {
-                    std::cout << *tmp;
-                }
-                std::cout << std::endl;
                 ostr << "Line: " << __LINE__ << " Unknown character in array: " << *iter;
                 throw runtime_error(ostr.str());
             }
             continue;
         }
         ValueTypeCast vtc;
-        std::cout << "pointer_start_ch: " << *iter << std::endl;
         switch (ret_value_type)
         {
             case JSON_OBJECT_TYPE:
@@ -674,7 +681,6 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         }
         
         array_val_.push_back(vtc);
-        std::cout << "pointer_end_ch: " << *iter << " last_type: " << ret_value_type << std::endl;
         if (iter != json_end_pos && *iter == ']') { // 有些解析玩就直接指向']'， 如果不退出在回到循环会因值自增错过
             break;
         }

@@ -3,6 +3,7 @@
 
 #include "basic_head.h"
 #include "byte_buffer.h"
+// #include "msg_record.h"
 
 namespace my_util {
 enum VALUE_TYPE {
@@ -21,7 +22,7 @@ enum NUMBER_TYPE_ {
     DOUBLE_TYPE = 10031,
 };
 
-class JsonType {
+class JsonType /* : public MsgRecord*/ {
 public:
     virtual ByteBuffer_Iterator parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos){}
     virtual string generate(string ctrl_ch = "\0") {};
@@ -29,6 +30,7 @@ public:
     ostream& operator<<(ostream &os) {};
     static VALUE_TYPE check_value_type(ByteBuffer_Iterator &iter);
 
+    string get_json_text(ByteBuffer_Iterator &value_curr_pos, int range, ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos);
 private:
     VALUE_TYPE json_value_type_;
 };

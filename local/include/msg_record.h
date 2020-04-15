@@ -23,11 +23,11 @@ public:
 
     void get_msg_info(int line, string file_name, const char *format, ...);
     void get_msg_info(int line, string file_name, const string &msg);
-    MsgContent get_all_msg(void) {return msg_info_;}
+    vector<MsgContent> get_all_msg(void) {return msg_info_;}
 
-    void print_msg(void);
+    string output_msg(void);
 private:
-    MsgContent msg_info_;
+    vector<MsgContent> msg_info_;
 };
 
 #define get_msg(...)         this->get_msg_info(__LINE__, __FILE__,__VA_ARGS__)
