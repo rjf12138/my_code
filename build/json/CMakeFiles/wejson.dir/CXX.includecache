@@ -86,10 +86,6 @@ file.h
 json_type.h
 ../local/include/json_type.h
 
-/home/ruanjian/workspace/project/my_code/json/json_type.cc
-json_type.h
-/home/ruanjian/workspace/project/my_code/json/json_type.h
-
 /home/ruanjian/workspace/project/my_code/json/wejson.cc
 wejson.h
 /home/ruanjian/workspace/project/my_code/json/wejson.h

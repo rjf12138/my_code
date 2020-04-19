@@ -129,7 +129,6 @@ public:
                     int16_t tmp_val = 0;
                     buff_.read_int16_lock(tmp_val);
                     if (tmp_val != vec_int16_) {
-                        std::cerr << tmp_val << std::endl;
                         return false;
                     }
                 }
@@ -139,7 +138,6 @@ public:
                     int32_t tmp_val = 0;
                     buff_.read_int32_lock(tmp_val);
                     if (tmp_val != vec_int32_) {
-                        std::cerr << tmp_val << std::endl;
                         return false;
                     }
                 }
@@ -149,17 +147,19 @@ public:
                     int64_t tmp_val = 0;
                     buff_.read_int64_lock(tmp_val);
                     if (tmp_val != vec_int64_) {
-                        std::cerr << tmp_val << std::endl;
                         return false;
                     }
                 }
                 break;
                 case 5:
                 {
-                    string tmp_val = "";
-                    buff_.read_string_lock(tmp_val);
+                    string tmp_val;
+                    buff_.read_string_lock(tmp_val, vec_string_.size());
                     if (tmp_val != vec_string_) {
-                        std::cerr << tmp_val << std::endl;
+                        std::cout << "read_size: " << tmp_val.size() << std::endl;
+                        std::cout << "src_size: " << vec_string_.size() << std::endl;
+                        std::cout << "read: " << tmp_val << std::endl;
+                        std::cout << "src: " << vec_string_ << std::endl;
                         return false;
                     }
                 }
@@ -259,7 +259,7 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
     for (int i = 0; i < test_cnt; ++i) {
         ASSERT_EQ(buff.data_size(), 0);
         ASSERT_EQ(buff.write_string(str), str.length());
-        ASSERT_EQ(buff.data_size(), str.length() + 1);
+        ASSERT_EQ(buff.data_size(), str.length());
         string val_str;
         EXPECT_EQ(buff.read_string(val_str), str.length());
         ASSERT_EQ(buff.data_size(), 0);
@@ -359,7 +359,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
-        test[i].set_type(5);
+        test[i].set_type(5); //测试字符串
         test[i].init();
     }
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
@@ -370,7 +370,7 @@ TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 
     buff.clear();
     for (int i = 0; i < TEST_THREAD_NUM; ++i) {
-        test[i].set_type(6);
+        test[i].set_type(6);// 测试多字节，用结构体代替测试
         test[i].init();
     }
     
@@ -397,6 +397,22 @@ TEST_F(ByteBuffer_Test, boundary_test)
     ASSERT_EQ(buff.data_size(), 0);
     ASSERT_EQ(buff.empty(), true);
 }
+
+TEST_F(ByteBuffer_Test, copy_test)
+{
+    ByteBuffer src, dest;
+    int start_size = 1000, end_size = 10000;
+    for (int i = start_size;i < end_size; i += 100) {
+        for (int j = 0;i < i; ++j) {
+            src.write_int8(j % 256);
+        }
+        dest = src;
+        ASSERT_EQ(src, dest);
+        dest.clear();
+        src.clear();
+    }
+}
+
 }  // namespace
 }  // namespace project
 }  // namespace my

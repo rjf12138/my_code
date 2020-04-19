@@ -22,7 +22,7 @@ FileOperate::open(const string file_path, int flag, int file_right)
     // 检查文件是否存在
     int ret = ::access(file_path.c_str(), F_OK);
     if (ret == -1) {
-        fd = ::open(file_path.c_str(), flag, file_right);
+        fd = ::open(file_path.c_str(), flag  | O_CREAT, file_right);
     } else {
         fd = ::open(file_path.c_str(), flag);
     }
@@ -131,16 +131,23 @@ FileOperate::read(ByteBuffer &buff, size_t buf_size)
         return -1;
     }
 
-    const int tmp_buf_size = buf_size;
+    const int tmp_buf_size = 8192;
     int8_t buf[tmp_buf_size] = {0};
-    ssize_t ret = ::read(fd_, buf, tmp_buf_size);
-    if (ret == -1) {
-        fprintf(stderr, "read: %s\n", strerror(errno));
-        return ret;
-    }
 
-    buff.write_bytes(buf, ret);
-    return ret;
+    size_t remain_size = buf_size;
+    size_t read_size = remain_size > 8192 ? tmp_buf_size : remain_size;
+    do {
+        ssize_t ret = ::read(fd_, buf, read_size);
+        if (ret == -1) {
+            fprintf(stderr, "read: %s\n", strerror(errno));
+            return ret;
+        }
+        buff.write_bytes(buf, ret);
+        remain_size -= ret;
+        read_size = remain_size > 8192 ? tmp_buf_size : remain_size;
+    }  while (remain_size > 0);
+   
+    return buff.data_size();
 }
 
 ssize_t 
@@ -162,27 +169,36 @@ FileOperate::read_from_pos(ByteBuffer &buff, size_t buf_size, off_t pos, int whe
 
 
 ssize_t 
-FileOperate::write(ByteBuffer buff, size_t buf_size)
+FileOperate::write(ByteBuffer &buff, size_t buf_size)
 {
     if (!file_open_flag_) {
         fprintf(stderr, "write: haven't open any file!\n");
         return -1;
     }
 
-    const int tmp_buf_size = buff.data_size();
+    const int tmp_buf_size = 8192;
     int8_t buf[tmp_buf_size] = {0};
-    buff.read_bytes(buf, tmp_buf_size);
-    ssize_t ret = ::write(fd_, buf, tmp_buf_size);
-    if (ret == -1) {
-        fprintf(stderr, "write: %s!\n", strerror(errno));
-        return -1;
-    }
 
-    return ret;
+    size_t remain_size = buf_size;
+    
+    do {
+        size_t read_size = remain_size > 8192 ? tmp_buf_size : remain_size;
+        size_t ret_read_size = buff.read_bytes(buf, read_size);
+
+        size_t ret = ::write(fd_, buf, ret_read_size);
+        if (ret == -1) {
+            fprintf(stderr, "write: %s\n", strerror(errno));
+            return ret;
+        }
+
+        remain_size -= ret_read_size;
+    }  while (remain_size > 0);
+   
+    return buf_size;
 }
 
 ssize_t 
-FileOperate::write_to_pos(ByteBuffer buff, size_t buf_size ,off_t pos, int whence)
+FileOperate::write_to_pos(ByteBuffer &buff, size_t buf_size ,off_t pos, int whence)
 {
     if (!file_open_flag_) {
         fprintf(stderr, "write_to_pos: haven't open any file!\n");
@@ -214,7 +230,7 @@ FileOperate::read_from_stdin(ByteBuffer &buff)
 }
 
 ssize_t 
-FileOperate::write_to_stdout(ByteBuffer buff, size_t buf_size)
+FileOperate::write_to_stdout(ByteBuffer &buff, size_t buf_size)
 {
     const int tmp_buf_size = buff.data_size();
     int8_t buf[tmp_buf_size] = {0};
@@ -229,7 +245,7 @@ FileOperate::write_to_stdout(ByteBuffer buff, size_t buf_size)
 }
 
 ssize_t 
-FileOperate::write_to_stderr(ByteBuffer buff, size_t buf_size)
+FileOperate::write_to_stderr(ByteBuffer &buff, size_t buf_size)
 {
     const int tmp_buf_size = buff.data_size();
     int8_t buf[tmp_buf_size] = {0};

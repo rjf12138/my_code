@@ -5,41 +5,50 @@ namespace my_util {
 VALUE_TYPE
 JsonType::check_value_type(ByteBuffer_Iterator &iter) 
 {
-        if (isdigit(*iter) || *iter == '-' || *iter == '+') {
-            return JSON_NUMBER_TYPE;
-        }
-        switch (*iter)
-        {
-            case '{':
-            {
-                return JSON_OBJECT_TYPE;
-            } break;
-            case '[':
-            {
-                return JSON_ARRAY_TYPE;
-            } break;
-            case '"':
-            {
-                return JSON_STRING_TYPE;
-            } break;
-            case 't':
-            {
-                return JSON_BOOL_TYPE;
-            }break;
-            case 'f':
-            {
-                return JSON_BOOL_TYPE;
-            }break;
-            case 'n':
-            {
-                return JSON_NULL_TYPE;
-            } break;
-            default:
-                break;
-        }
-
+    if (iter == iter.end()){
         return UNKNOWN_TYPE;
     }
+    if (isdigit(*iter) || *iter == '-' || *iter == '+') {
+        return JSON_NUMBER_TYPE;
+    }
+
+    for (auto tmp = iter; tmp != iter + 17; ++tmp) {
+        std::cout << *tmp << " " <<(int32_t)*iter << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << "start_pos: " << *iter << std::endl;
+    switch (*iter)
+    {
+        case '{':
+        {
+            return JSON_OBJECT_TYPE;
+        } break;
+        case '[':
+        {
+            return JSON_ARRAY_TYPE;
+        } break;
+        case '"':
+        {
+            return JSON_STRING_TYPE;
+        } break;
+        case 't':
+        {
+            return JSON_BOOL_TYPE;
+        }break;
+        case 'f':
+        {
+            return JSON_BOOL_TYPE;
+        }break;
+        case 'n':
+        {
+            return JSON_NULL_TYPE;
+        } break;
+        default:
+            break;
+    }
+
+    return UNKNOWN_TYPE;
+}
 
 string 
 JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos,  int range, ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos)

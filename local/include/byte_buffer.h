@@ -30,28 +30,28 @@ public:
     int read_int16(int16_t &val);
     int read_int32(int32_t &val);
     int read_int64(int64_t &val);
-    int read_string(string &str);
+    int read_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes(void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int write_int8(int8_t val);
     int write_int16(int16_t val);
     int write_int32(int32_t val);
     int write_int64(int64_t val);
-    int write_string(string str);
+    int write_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int read_int8_lock(int8_t &val);
     int read_int16_lock(int16_t &val);
     int read_int32_lock(int32_t &val);
     int read_int64_lock(int64_t &val);
-    int read_string_lock(string &str);
+    int read_string_lock(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match = false);
 
     int write_int8_lock(int8_t val);
     int write_int16_lock(int16_t val);
     int write_int32_lock(int32_t val);
     int write_int64_lock(int64_t val);
-    int write_string_lock(string str);
+    int write_string_lock(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     // 网络字节序转换
@@ -62,28 +62,21 @@ public:
     int write_int16_hton(const int16_t &val);
     int write_int32_hton(const int32_t &val);
 
-    bool empty(void);
-    int data_size(void);
-    int idle_size(void);
+    bool empty(void) const;
+    int data_size(void) const;
+    int idle_size(void) const;
     int clear(void);
     // 重新分配缓冲区大小(只能向上增长),minsize表示重新分配缓冲区的下限
     int resize(BUFSIZE_T min_size);
-
-    // 获取错误码，只在错误发生后调用才有效
-    int get_error(void);
-    // 根据错误码返回错误消息
-    string get_err_msg(int err);
-    // 获取错消息，只在错误发生后调用才有效
-    string get_err_msg(void);
     
     // 返回起始结束迭代器
-    ByteBuffer_Iterator begin(void);
-    ByteBuffer_Iterator end(void);
+    ByteBuffer_Iterator begin(void) const;
+    ByteBuffer_Iterator end(void) const;
 
     // 重载操作符
     friend ByteBuffer operator+(ByteBuffer &lhs, ByteBuffer &rhs);
-    friend bool operator==(ByteBuffer &lhs, ByteBuffer &rhs);
-    friend bool operator!=(ByteBuffer &lhs, ByteBuffer &rhs);
+    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    friend bool operator!=(const ByteBuffer &lhs, const ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);
 
 private:
@@ -117,76 +110,78 @@ class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t>
     friend class ByteBuffer;
 public:
     ByteBuffer_Iterator(void) = default;
-    explicit ByteBuffer_Iterator(ByteBuffer &buff)
+    explicit ByteBuffer_Iterator(const ByteBuffer *buff)
             : buff_(buff), curr_pos_(){}
 
     ByteBuffer_Iterator begin() 
     {
-        curr_pos_ = buff_.start_read_pos_;
-        return *this;
+        ByteBuffer_Iterator tmp = *this;
+        tmp.curr_pos_ = buff_->start_read_pos_;
+        return tmp;
     }
 
     ByteBuffer_Iterator end()
     {
-        curr_pos_ = buff_.start_write_pos_;
-        return *this;
+        ByteBuffer_Iterator tmp = *this;
+        tmp.curr_pos_ = buff_->start_write_pos_;
+        return tmp;
     }
 
     int8_t operator*()
     {
-        if (curr_pos_ == buff_.start_write_pos_) {
+        if (curr_pos_ == buff_->start_write_pos_) {
             ostringstream ostr;
             ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator+ out of range.";
             ostr << "debug_info: " << this->debug_info() << std::endl;
             throw runtime_error(ostr.str());
         }
-        return buff_.buffer_[curr_pos_];
+        return buff_->buffer_[curr_pos_];
     }
     // 前置++
     ByteBuffer_Iterator& operator++()
     {
-        if (curr_pos_ == buff_.start_write_pos_)
+        if (curr_pos_ == buff_->start_write_pos_)
         {
             return *this;
         }
-        curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ + 1) % buff_.max_buffer_size_;
+        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + 1) % buff_->max_buffer_size_;
         return *this;
     }
     // 后置++
     ByteBuffer_Iterator& operator++(int)
     {
-        if (curr_pos_ == buff_.start_write_pos_)
+        if (curr_pos_ == buff_->start_write_pos_)
         {
             return *this;
         }
 
         ByteBuffer_Iterator &tmp = *this;
-        curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ + 1) % buff_.max_buffer_size_;
+        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + 1) % buff_->max_buffer_size_;
 
         return tmp;
     }
     // 前置--
     ByteBuffer_Iterator& operator--()
     {
-        if (curr_pos_ == buff_.start_read_pos_ || curr_pos_ == buff_.start_write_pos_) {
-            curr_pos_ = buff_.start_write_pos_;
+        if (curr_pos_ == buff_->start_read_pos_ || curr_pos_ == buff_->start_write_pos_) {
+            curr_pos_ = buff_->start_write_pos_;
             return *this;
         }
 
-        curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ - 1) % buff_->max_buffer_size_;
 
         return *this;
     }
     // 后置--
     ByteBuffer_Iterator& operator--(int)
     {
-        if (curr_pos_ == buff_.start_read_pos_ || curr_pos_ == buff_.start_write_pos_) {
-            curr_pos_ = buff_.start_write_pos_;
+        if (curr_pos_ == buff_->start_read_pos_ || curr_pos_ == buff_->start_write_pos_) {
+            curr_pos_ = buff_->start_write_pos_;
             return *this;
         }
 
         ByteBuffer_Iterator &tmp = *this;
-        curr_pos_ = (curr_pos_ + buff_.max_buffer_size_ - 1) % buff_.max_buffer_size_;
+        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ - 1) % buff_->max_buffer_size_;
 
         return tmp;
     }
@@ -210,10 +205,11 @@ public:
     }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ == iter.curr_pos_ && buff_.buffer_ == iter.buff_.buffer_);
+        std::cout << "curr_pos: " << curr_pos_ << std::endl;
+        return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
     }
     bool operator!=(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ != iter.curr_pos_ || buff_.buffer_ != iter.buff_.buffer_);
+        return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
     }
     bool operator>(const ByteBuffer_Iterator& iter) const {
         if (buff_ != iter.buff_) {
@@ -222,7 +218,7 @@ public:
         if (curr_pos_ > iter.curr_pos_) {
             return true;
         } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_.start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_) {
                 return true;
             }
         }
@@ -236,7 +232,7 @@ public:
         if (curr_pos_ >= iter.curr_pos_) {
             return true;
         } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_.start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_) {
                 return true;
             }
         }
@@ -250,7 +246,7 @@ public:
         if (curr_pos_ >= iter.curr_pos_) {
             return false;
         } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_.start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_) {
                 return false;
             }
         }
@@ -264,7 +260,7 @@ public:
         if (curr_pos_ > iter.curr_pos_) {
             return false;
         } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_.start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_) {
                 return false;
             }
         }
@@ -286,16 +282,16 @@ public:
 
         ostr << std::endl << "--------------debug_info-----------------------" << std::endl;
         ostr << "curr_pos: " << curr_pos_ << std::endl;
-        ostr << "begin_pos: " << buff_.begin().curr_pos_ << std::endl;
-        ostr << "end_pos: " << buff_.end().curr_pos_ << std::endl;
-        ostr << "buff_length: "  << buff_.data_size() << std::endl;
+        ostr << "begin_pos: " << buff_->begin().curr_pos_ << std::endl;
+        ostr << "end_pos: " << buff_->end().curr_pos_ << std::endl;
+        ostr << "buff_length: "  << buff_->data_size() << std::endl;
         ostr << "------------------------------------------------" << std::endl;
 
         return ostr.str();
     }
 
 private:
-    ByteBuffer &buff_;
+    const ByteBuffer *buff_ = nullptr;
     int32_t curr_pos_;
 };
 

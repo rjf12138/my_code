@@ -26,8 +26,13 @@ WeJson::open_json(string json_file_path)
     struct stat file_info;
     off_t file_size = json_file.fileinfo(file_info);
     json_file.read(raw_json_buffer, file_info.st_size);
+    for (auto iter = raw_json_buffer.begin(); iter != raw_json_buffer.begin() + 17; ++iter) {
+        std::cout << *iter << " " << (int32_t)*iter << std::endl;
+    }
+    // FileOperate json_write_file;
+    // json_write_file.open("/home/ruanjian/workspace/project/my_code/json/test/json_text/large_copy.json", DEFAULT_OPEN_FLAG | O_CREAT);
+    // json_write_file.write(raw_json_buffer, raw_json_buffer.data_size());
     this->parser_from_json(raw_json_buffer);
-
     return 0;
 }
 
@@ -61,10 +66,21 @@ int
 WeJson::parser_from_json(ByteBuffer &buff)
 {
     ByteBuffer simple_json_text;
-    bool quotation_marks = false;
-    ByteBuffer_Iterator tmp_pos = buff.begin();
+    ByteBuffer_Iterator start_pos;
+    for (start_pos = buff.begin(); start_pos != buff.end(); ++start_pos) {
+        VALUE_TYPE ret = JsonType::check_value_type(start_pos);
+        if (ret == JSON_OBJECT_TYPE || ret == JSON_ARRAY_TYPE) {
+            break;
+        }
+    }
+    if (start_pos == buff.end()) {
+        return -1;
+    }
+
     int i = 0;
-    for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
+    bool quotation_marks = false;
+    ByteBuffer_Iterator tmp_pos;
+    for (auto iter = start_pos; iter != buff.end(); ++iter) {
         if (quotation_marks == false && *iter == '"') {
             tmp_pos = iter;
             quotation_marks = true;
@@ -90,7 +106,12 @@ WeJson::parser_from_json(ByteBuffer &buff)
     }
     auto begin_json = simple_json_text.begin();
     auto end_json = simple_json_text.end();
+    std::cout << simple_json_text.data_size() << std::endl;
 
+    // FileOperate json_write_file;
+    // json_write_file.open("/home/ruanjian/workspace/project/my_code/json/test/json_text/large_copy.json");
+    // json_write_file.write(simple_json_text, simple_json_text.data_size());
+    // return 0;
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
         json_value_.json_array_value_.parse(begin_json, end_json);
