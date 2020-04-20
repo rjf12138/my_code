@@ -205,7 +205,6 @@ public:
     }
     // 只支持 == ,!= , = 其他的比较都不支持
     bool operator==(const ByteBuffer_Iterator& iter) const {
-        std::cout << "curr_pos: " << curr_pos_ << std::endl;
         return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
     }
     bool operator!=(const ByteBuffer_Iterator& iter) const {

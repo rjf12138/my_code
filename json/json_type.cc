@@ -12,11 +12,6 @@ JsonType::check_value_type(ByteBuffer_Iterator &iter)
         return JSON_NUMBER_TYPE;
     }
 
-    for (auto tmp = iter; tmp != iter + 17; ++tmp) {
-        std::cout << *tmp << " " <<(int32_t)*iter << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << "start_pos: " << *iter << std::endl;
     switch (*iter)
     {
         case '{':
@@ -51,20 +46,28 @@ JsonType::check_value_type(ByteBuffer_Iterator &iter)
 }
 
 string 
-JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos,  int range, ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos)
+JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos, int range)
 {
     ostringstream ostr;
-
+    ostr << "json text arround error: ";
     auto pos = value_curr_pos;
     for (int i = 0; i < range; ++i) {
-        if (value_curr_pos == json_end_pos) {
+        if (value_curr_pos == value_curr_pos.end()) {
             return "end of json.";
         }
         ostr << *pos;
         ++pos;
     }
-    
+    ostr << " Error occur pos: " << *value_curr_pos;
     return ostr.str();
+}
+
+void 
+JsonType::debug_info(ByteBuffer_Iterator &value_curr_pos, string err_info)
+{
+    get_format_msg("Error: %s", err_info.c_str());
+    get_str_msg(this->get_json_text(value_curr_pos, 15));
+    output_msg();
 }
 
 ///////////////////////////////////////////////////////////

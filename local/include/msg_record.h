@@ -19,19 +19,17 @@ public:
     MsgRecord(void);
     virtual ~MsgRecord(void);
 
-    virtual string debug_info(void) {} // 用它来记录错误发生时的信息
-
     void get_msg_info(int line, string file_name, const char *format, ...);
     void get_msg_info(int line, string file_name, const string &msg);
     vector<MsgContent> get_all_msg(void) {return msg_info_;}
 
-    string output_msg(void);
+    string assembe_msg(void);
 private:
     vector<MsgContent> msg_info_;
 };
 
-#define get_msg(...)         this->get_msg_info(__LINE__, __FILE__,__VA_ARGS__)
-
+#define get_format_msg(...)         this->get_msg_info(__LINE__, __FILE__, __VA_ARGS__)
+#define get_str_msg(str)            this->get_msg_info(__LINE__, __FILE__, str)
 }
 
 #endif

@@ -26,13 +26,8 @@ WeJson::open_json(string json_file_path)
     struct stat file_info;
     off_t file_size = json_file.fileinfo(file_info);
     json_file.read(raw_json_buffer, file_info.st_size);
-    for (auto iter = raw_json_buffer.begin(); iter != raw_json_buffer.begin() + 17; ++iter) {
-        std::cout << *iter << " " << (int32_t)*iter << std::endl;
-    }
-    // FileOperate json_write_file;
-    // json_write_file.open("/home/ruanjian/workspace/project/my_code/json/test/json_text/large_copy.json", DEFAULT_OPEN_FLAG | O_CREAT);
-    // json_write_file.write(raw_json_buffer, raw_json_buffer.data_size());
     this->parser_from_json(raw_json_buffer);
+
     return 0;
 }
 
@@ -106,12 +101,7 @@ WeJson::parser_from_json(ByteBuffer &buff)
     }
     auto begin_json = simple_json_text.begin();
     auto end_json = simple_json_text.end();
-    std::cout << simple_json_text.data_size() << std::endl;
 
-    // FileOperate json_write_file;
-    // json_write_file.open("/home/ruanjian/workspace/project/my_code/json/test/json_text/large_copy.json");
-    // json_write_file.write(simple_json_text, simple_json_text.data_size());
-    // return 0;
     VALUE_TYPE ret_type = JsonType::check_value_type(begin_json);
     if (ret_type == JSON_ARRAY_TYPE) {
         json_value_.json_array_value_.parse(begin_json, end_json);
@@ -140,7 +130,7 @@ WeJson::operator[](string key)
     return json_value_.json_object_value_[key];
 }
 ValueTypeCast& 
-WeJson::operator[](int key)
+WeJson::operator[](int index)
 {
     if (json_value_.json_value_type_ != JSON_OBJECT_TYPE) {
         ostringstream ostr;
@@ -148,7 +138,7 @@ WeJson::operator[](int key)
         throw runtime_error(ostr.str());
     }
 
-    return json_value_.json_array_value_[key];
+    return json_value_.json_array_value_[index];
 }
 
 string 

@@ -57,7 +57,7 @@ MsgRecord::get_msg_info(int occur_line, string occur_file, const string &msg)
 }
 
 string
-MsgRecord::output_msg()
+MsgRecord:: assembe_msg(void)
 {
     ostringstream ostr;
     for (int i = 0; i < msg_info_.size(); ++i) {
