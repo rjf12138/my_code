@@ -12,14 +12,19 @@ WeJson::~WeJson(void)
 
 }
 
+string 
+WeJson::debug_info(void)
+{
+    return "";
+}
+
 int
 WeJson::open_json(string json_file_path)
 {
     FileOperate json_file;
     if (json_file.open(json_file_path) == -1) {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " file: " << json_file_path << " is not exists.";
-        throw runtime_error(ostr.str());
+        string err_info = get_msg("File: %s is not exists.", json_file_path.c_str());
+        throw runtime_error(err_info);
     }
 
     ByteBuffer raw_json_buffer;
@@ -36,9 +41,8 @@ WeJson::write_json(string json_file_path)
 {
     FileOperate json_file;
     if (json_file.open(json_file_path) == -1) {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " file: " << json_file_path << " is not exists.";
-        throw runtime_error(ostr.str());
+        string err_info = get_msg("File: %s is not exists.", json_file_path.c_str());
+        throw runtime_error(err_info);
     }
 
     ByteBuffer buff;
@@ -110,9 +114,8 @@ WeJson::parser_from_json(ByteBuffer &buff)
         json_value_.json_object_value_.parse(begin_json, end_json);
         json_value_.json_value_type_ = JSON_OBJECT_TYPE;
     } else {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Error json text!";
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("Unknown json type (object or array)");
+        throw runtime_error(err_str);
     }
 
     return 0;
@@ -122,9 +125,8 @@ ValueTypeCast&
 WeJson::operator[](string key)
 {
     if (json_value_.json_value_type_ != JSON_OBJECT_TYPE) {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Can't visit json value!";
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("It's not an json object type!");
+        throw runtime_error(err_str);
     }
 
     return json_value_.json_object_value_[key];
@@ -133,9 +135,8 @@ ValueTypeCast&
 WeJson::operator[](int index)
 {
     if (json_value_.json_value_type_ != JSON_OBJECT_TYPE) {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Can't visit json value!";
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("It's not an json array type!");
+        throw runtime_error(err_str);
     }
 
     return json_value_.json_array_value_[index];

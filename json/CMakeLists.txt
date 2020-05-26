@@ -8,3 +8,4 @@ add_library(wejson ${WEJSON})
 
 target_link_libraries(wejson buffer)
 target_link_libraries(wejson file)
+target_link_libraries(wejson msg_record)

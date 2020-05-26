@@ -9,11 +9,11 @@ namespace my_util {
 enum VALUE_TYPE {
     UNKNOWN_TYPE = -1000,
     JSON_NUMBER_TYPE = 10001,
-    JSON_BOOL_TYPE,
-    JSON_NULL_TYPE,
-    JSON_STRING_TYPE,
-    JSON_ARRAY_TYPE,
-    JSON_OBJECT_TYPE
+    JSON_BOOL_TYPE = 10002,
+    JSON_NULL_TYPE = 10003,
+    JSON_STRING_TYPE = 10004,
+    JSON_ARRAY_TYPE = 10005,
+    JSON_OBJECT_TYPE = 10006
 };
 
 enum NUMBER_TYPE_ {
@@ -24,17 +24,21 @@ enum NUMBER_TYPE_ {
 
 class JsonType : public MsgRecord {
 public:
+    // 检查当前位置的字符来判断接下来的是什么类型，具体参考doc中的资料
     static VALUE_TYPE check_value_type(ByteBuffer_Iterator &iter);
-
+    // 解析遇到的类型，具体取决于check_value_type()返回的类型和继承该类的实现
     virtual ByteBuffer_Iterator parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_end_pos){}
+    // 将当前类型以字符串方式输出，ctrl_ch控制输出的格式，为了方便阅读
     virtual string generate(string ctrl_ch = "\0") {};
-
+    // 获取以value_curr_pos为中心，range为半径范围的json值，主要为了调试用
     string get_json_text(ByteBuffer_Iterator &value_curr_pos, int range);
-    virtual void debug_info(ByteBuffer_Iterator &value_curr_pos, string err_info);
+    // 输出调试信息
+    virtual string debug_info(ByteBuffer_Iterator &value_curr_pos);
 private:
     VALUE_TYPE json_value_type_;
 };
 
+// json 数值类型
 class JsonNumber : public JsonType{
 public:
     JsonNumber(void);
@@ -59,6 +63,7 @@ private:
     int32_t       int_value_;
 };
 
+// json 布尔类型
 class JsonBool : public JsonType {
 public:
     JsonBool(void);
@@ -78,6 +83,7 @@ private:
     bool value_;
 };
 
+// json null 类型
 class JsonNull : public JsonType {
 public:
     JsonNull(void);
@@ -97,6 +103,7 @@ private:
     string value_;
 };
 
+// json 字符串类型
 class JsonString : public JsonType {
 public:
     JsonString(void);
@@ -116,6 +123,7 @@ private:
     string value_;
 };
 
+// json 对象类型
 class ValueTypeCast;
 class JsonObject : public JsonType {
 public:
@@ -135,6 +143,7 @@ private:
     map<string, ValueTypeCast> object_val_;
 };
 
+// json 数组类型
 class JsonArray : public JsonType {
 public:
     JsonArray(void);
@@ -154,7 +163,8 @@ public:
     vector<ValueTypeCast> array_val_;
 };
 
-class ValueTypeCast {
+// json中转类型：可以安装当前存储的类型输出或是接收不同的类型
+class ValueTypeCast : public JsonType {
 public:
     ValueTypeCast(void);
     ValueTypeCast(JsonBool value);

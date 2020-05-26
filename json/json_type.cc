@@ -49,25 +49,23 @@ string
 JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos, int range)
 {
     ostringstream ostr;
-    ostr << "json text arround error: ";
+    ostr << "json text arround error: " << endl;
     auto pos = value_curr_pos;
-    for (int i = 0; i < range; ++i) {
-        if (value_curr_pos == value_curr_pos.end()) {
-            return "end of json.";
-        }
+    auto lower_limit = value_curr_pos - range > value_curr_pos.begin() ? value_curr_pos - range : value_curr_pos.begin();
+    auto upper_limit = value_curr_pos + range > value_curr_pos.end() ? value_curr_pos.end() -1 : value_curr_pos + range;
+
+    for (auto pos = lower_limit; pos <= upper_limit; ++pos) {
         ostr << *pos;
-        ++pos;
     }
-    ostr << " Error occur pos: " << *value_curr_pos;
+
+    ostr << endl << " Error occur pos: " << *value_curr_pos;
     return ostr.str();
 }
 
-void 
-JsonType::debug_info(ByteBuffer_Iterator &value_curr_pos, string err_info)
+string
+JsonType::debug_info(ByteBuffer_Iterator &value_curr_pos)
 {
-    get_format_msg("Error: %s", err_info.c_str());
-    get_str_msg(this->get_json_text(value_curr_pos, 15));
-    output_msg();
+    return get_json_text(value_curr_pos, 30); //先定60个字符的范围 
 }
 
 ///////////////////////////////////////////////////////////
@@ -113,9 +111,8 @@ JsonNumber::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 
     if (iter != json_end_pos && *iter == '0') {
         if (isdigit(*(iter+1))) { // 除了小数和数值0之外，零不能作为第一个数
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " Zero can't be first number of integer!";
-            throw runtime_error(ostr.str());
+            string err_str = get_msg("Zero can't be first number of integer!\n%s", this->debug_info(iter).c_str());
+            throw runtime_error(err_str);
         }
     }
 
@@ -256,9 +253,8 @@ JsonBool::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
     } else if (str == "false") {
         value_ = false;
     } else {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Expected true or false, but result is " << str;
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("Expected true or false, but result is %s\n%s", str.c_str(), this->debug_info(iter).c_str());
+        throw runtime_error(err_str);
     }
 
     return iter;
@@ -329,9 +325,8 @@ JsonNull::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json_
     if (str == "null") {
         value_ = str;
     } else {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Expected null, but result is " << str;
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("Expected null, but result is %s\n%s", str.c_str(), this->debug_info(iter).c_str());
+        throw runtime_error(err_str);
     }
 
 
@@ -401,9 +396,8 @@ JsonString::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 
     if (iter == json_end_pos)
     {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " String need to surround by \"\" " << str;
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("String need to surround by \"\" \n%s", this->debug_info(iter).c_str());
+        throw runtime_error(err_str);
     }
     value_ = str;
     ++iter; //  iter 指向下一个字符
@@ -470,9 +464,8 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',' && *iter != ':' && *iter != ']') {
-                ostringstream ostr;
-                ostr << "Line: " << __LINE__ << " Unknown character in object: " << *iter;
-                throw runtime_error(ostr.str());
+                string err_str = get_msg("Unknown character in object: %c\n%s", *iter, this->debug_info(iter).c_str());
+                throw runtime_error(err_str);
             }
             continue;
         }
@@ -531,9 +524,8 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
         if (object_val_.find(value_name) == object_val_.end()) {
             object_val_[value_name] = vtc;
         } else {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " There's already \"" << value_name << "\" exists.";
-            throw runtime_error(ostr.str());
+            string err_str = get_msg("There's already \"%s\" exists.\n%s", this->debug_info(iter).c_str());
+            throw runtime_error(err_str);
         }
         flag = false;
         if (*iter == '}') { // 有些解析玩就直接指向'}'， 如果不退出在回到循环会因值自增错过
@@ -643,9 +635,8 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         VALUE_TYPE ret_value_type = this->check_value_type(iter);
         if (ret_value_type == UNKNOWN_TYPE) {
             if (*iter != ',') {
-                ostringstream ostr;
-                ostr << "Line: " << __LINE__ << " Unknown character in array: " << *iter;
-                throw runtime_error(ostr.str());
+                string err_str = get_msg("Unknown character in array: %c\n%s", *iter, this->debug_info(iter).c_str());
+                throw runtime_error(err_str);
             }
             continue;
         }
@@ -698,9 +689,8 @@ JsonArray::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &json
         }
     }
     if (iter == json_end_pos) {
-        ostringstream ostr;
-        ostr << "Line: " << __LINE__ << " Array need to surround by []";
-        throw runtime_error(ostr.str());
+        string err_str = get_msg("Array need to surround by []\n%s", this->debug_info(iter).c_str());
+        throw runtime_error(err_str);
     }
     ++iter;
     return iter;
@@ -813,7 +803,8 @@ ValueTypeCast::operator JsonBool()
     if (json_value_type_ == JSON_BOOL_TYPE) {
         return json_bool_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not bool");
+        string err_str = get_msg("value cast faled: current type is not bool");
+        throw runtime_error(err_str);
     }
 }
 
@@ -822,7 +813,8 @@ ValueTypeCast::operator JsonNumber()
     if (json_value_type_ == JSON_NUMBER_TYPE) {
         return json_number_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not number");
+        string err_str = get_msg("value cast faled: current type is not number");
+        throw runtime_error(err_str);
     }
 }
 ValueTypeCast::operator JsonString()
@@ -830,7 +822,8 @@ ValueTypeCast::operator JsonString()
     if (json_value_type_ == JSON_STRING_TYPE) {
         return json_string_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not string");
+        string err_str = get_msg("value cast faled: current type is not string");
+        throw runtime_error(err_str);
     }
 }
 
@@ -839,7 +832,8 @@ ValueTypeCast::operator JsonObject()
     if (json_value_type_ == JSON_OBJECT_TYPE) {
         return json_object_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not object");
+        string err_str = get_msg("value cast faled: current type is not object");
+        throw runtime_error(err_str);
     }
 }
 ValueTypeCast::operator JsonArray()
@@ -847,7 +841,8 @@ ValueTypeCast::operator JsonArray()
     if (json_value_type_ == JSON_OBJECT_TYPE) {
         return json_array_value_;
     } else {
-        throw runtime_error("value cast faled: current type is not array");
+        string err_str = get_msg("value cast faled: current type is not array");
+        throw runtime_error(err_str);
     }
 }
 
@@ -856,7 +851,8 @@ ValueTypeCast::operator JsonNull()
     if (json_value_type_ == JSON_NULL_TYPE) {
         return json_null_value_;
     } else {
-        throw runtime_error("value cast failed: current type is not null");
+        string err_str = get_msg("value cast failed: current type is not null");
+        throw runtime_error(err_str);
     }
 }
 

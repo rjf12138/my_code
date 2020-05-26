@@ -5,11 +5,10 @@
 #include "byte_buffer.h"
 #include "file.h"
 #include "json_type.h"
-// #include "msg_record.h"
 
 namespace my_util {
 
-class WeJson {
+class WeJson : public MsgRecord {
 public:
     WeJson(void);
     WeJson(string str);

@@ -16,7 +16,7 @@ public:
     // 根据文件路径打开文件
     int open(const string file_path, int flag = DEFAULT_OPEN_FLAG, int file_right = DEFAULT_FILE_RIGHT);
     // 根据文件描述符打开文件
-    int set_fd(int fd, bool open_on_exit = true);
+    int set_fd(int fd, bool open_when_exit = true);
 
     int fileinfo(struct stat &file_info);
     int close_file(void);

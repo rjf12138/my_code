@@ -25,9 +25,13 @@ protected:
 
 TEST_F(WeJson_Test, NUMBER_TEST)
 {
-    WeJson json;
-    json.open_json("/home/ruanjian/workspace/project/my_code/json/test/json_text/large.json");
-    cout << json.generate_to_json() << std::endl;
+    JsonNumber json_number;
+    
+}
+
+TEST_F(WeJson_Test, NUMBER_TEST)
+{
+    
 }
 
 }
