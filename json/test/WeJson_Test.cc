@@ -25,11 +25,16 @@ protected:
 
 TEST_F(WeJson_Test, NUMBER_TEST)
 {
-    JsonNumber json_number;
-    
+    JsonNumber json_number_test_1(1.1214);
+    JsonNumber json_number_test_2(12);
+    JsonNumber json_number_test_3(json_number_test_1);
+    JsonNumber json_number_test_4(json_number_test_2);
+    ostringstream test_stream;
+    test_stream << json_number_test_1 << endl <<  json_number_test_2 << endl << json_number_test_3 << endl << json_number_test_4;
+    cout << test_stream.str() << std::endl;
 }
 
-TEST_F(WeJson_Test, NUMBER_TEST)
+TEST_F(WeJson_Test, TYPE_TEST)
 {
     
 }

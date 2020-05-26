@@ -139,7 +139,7 @@ JsonNumber::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 }
 
 string 
-JsonNumber::generate(string ctrl_ch)
+JsonNumber::generate(string ctrl_ch) 
 {
     switch (value_type_)
     {
@@ -159,9 +159,9 @@ JsonNumber::generate(string ctrl_ch)
 }
 
 ostream& 
-JsonNumber::operator<<(ostream &os)
+operator<<(ostream &os, JsonNumber &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -183,24 +183,6 @@ bool
 JsonNumber::operator!=(const JsonNumber& rhs) const
 {
     return !(*this == rhs);
-}
-
-JsonNumber::operator double()
-{
-    if (value_type_ == INT32_TYPE) {
-        return int_value_;
-    } else if (value_type_ == DOUBLE_TYPE) {
-        return double_value_;
-    }
-}
-
-JsonNumber::operator int()
-{
-    if (value_type_ == INT32_TYPE) {
-        return int_value_;
-    } else if (value_type_ == DOUBLE_TYPE) {
-        return static_cast<int>(double_value_);
-    }
 }
 
 JsonNumber& 
@@ -266,10 +248,9 @@ JsonBool::generate(string ctrl_ch)
     return value_ == true? "true":"false";
 }
 
-ostream& 
-JsonBool::operator<<(ostream &os)
+ostream& operator<<(ostream &os, JsonBool &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -285,10 +266,7 @@ JsonBool::operator!=(const JsonBool& rhs) const
 {
     return !(*this == rhs);
 }
-JsonBool::operator bool()
-{
-    return value_;
-}
+
 
 JsonBool& 
 JsonBool::operator=(JsonBool rhs)
@@ -339,10 +317,9 @@ JsonNull::generate(string ctrl_ch)
     return value_;
 }
 
-ostream& 
-JsonNull::operator<<(ostream &os)
+ostream& operator<<(ostream &os, JsonNull &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -359,10 +336,6 @@ JsonNull::operator!=(const JsonNull& rhs) const
     return !(*this == rhs);
 }
 
-JsonNull::operator string()
-{
-    return value_;
-}
 
 JsonNull& 
 JsonNull::operator=(JsonNull rhs)
@@ -412,10 +385,9 @@ JsonString::generate(string ctrl_ch)
     return str;
 }
 
-ostream& 
-JsonString::operator<<(ostream &os)
+ostream& operator<<(ostream &os, JsonString &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -432,11 +404,6 @@ bool JsonString::operator==(const JsonString& rhs) const
 bool JsonString::operator!=(const JsonString& rhs) const
 {
     return !(*this == rhs);
-}
-
-JsonString::operator string()
-{
-    return value_;
 }
 
 JsonString& 
@@ -473,7 +440,7 @@ JsonObject::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
         JsonString json_str;
         if (flag == false && ret_value_type == JSON_STRING_TYPE) {
             iter = json_str.parse(iter, json_end_pos);
-            value_name = json_str;
+            value_name = json_str.generate();
             flag = true;
             continue;
         }
@@ -565,10 +532,9 @@ JsonObject::generate(string ctrl_ch)
     return output_obj.str();
 }
 
-ostream& 
-JsonObject::operator<<(ostream &os)
+ostream& operator<<(ostream &os, JsonObject &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -719,10 +685,9 @@ JsonArray::generate(string ctrl_ch)
     return ostr.str();
 }
 
-ostream& 
-JsonArray::operator<<(ostream &os)
+ostream& operator<<(ostream &os, JsonArray &rhs)
 {
-    os << this->generate();
+    os << rhs.generate();
 
     return os;
 }
@@ -924,28 +889,27 @@ ValueTypeCast::operator=(ValueTypeCast val)
     return *this;
 }
 
-ostream& 
-ValueTypeCast::operator<<(ostream &os)
+ostream& operator<<(ostream &os, ValueTypeCast &rhs)
 {
-    switch (json_value_type_)
+    switch (rhs.json_value_type_)
     {
     case JSON_NULL_TYPE:
-        os << json_null_value_.generate();
+        os << rhs.json_null_value_.generate();
         break;
     case JSON_NUMBER_TYPE:
-        os << json_number_value_.generate();
+        os << rhs.json_number_value_.generate();
         break;
     case JSON_STRING_TYPE:
-        os << json_string_value_.generate();
+        os << rhs.json_string_value_.generate();
         break;
     case JSON_BOOL_TYPE:
-        os << json_bool_value_.generate();
+        os << rhs.json_bool_value_.generate();
         break;
     case JSON_ARRAY_TYPE:
-        os << json_array_value_.generate();
+        os << rhs.json_array_value_.generate();
         break;
     case  JSON_OBJECT_TYPE:
-        os << json_object_value_.generate();
+        os << rhs.json_object_value_.generate();
         break;
     default:
         os << "NONE_TYPE";
