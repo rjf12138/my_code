@@ -58,7 +58,11 @@ JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos, int range)
         ostr << *pos;
     }
 
-    ostr << endl << " Error occur pos: " << *value_curr_pos;
+    if (value_curr_pos != value_curr_pos.end()) {
+        ostr << endl << " Error occur pos: " << *value_curr_pos;
+    } else {
+        ostr << endl << " Error occur pos: At End";
+    }
     return ostr.str();
 }
 
@@ -174,6 +178,15 @@ JsonNumber::operator==(const JsonNumber& rhs) const
             return int_value_ == rhs.int_value_?true:false;
         } else if (value_type_ == DOUBLE_TYPE) {
             return double_value_ == rhs.double_value_?true:false;
+        }
+    } else {
+        if (value_type_ == INT32_TYPE) {
+            double tmp = int_value_;
+            return (tmp == rhs.double_value_? true: false); 
+        }
+        else {
+            double tmp = rhs.int_value_;
+            return (tmp == double_value_? true: false); 
         }
     }
 

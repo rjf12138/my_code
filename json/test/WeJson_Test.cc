@@ -22,6 +22,33 @@ protected:
     }
 };
 
+bool test_number(double val, string str_val)
+{
+    JsonNumber json_number(val);
+    ostringstream ostr;
+    ostr << json_number;
+    if (stod(ostr.str().c_str()) == stod(str_val.c_str())) {
+        return true;
+    }
+    fprintf(stdout, "double: %lf, str_double: %s, convert_double: %s\n", val, str_val.c_str(), ostr.str().c_str());
+    return false;
+}
+
+bool test_parse_number(double val, string str_val)
+{
+    ByteBuffer buff;
+    buff.write_string(str_val, str_val.length());
+    JsonNumber json_number;
+    auto str_number_begin = buff.begin();
+    auto str_number_end = buff.end();
+    json_number.parse(str_number_begin, str_number_end);
+
+    if (stod(json_number.generate().c_str()) == stod(str_val.c_str())) {
+        return true;
+    }
+
+    fprintf(stdout, "double: %lf, str_double: %s, read_double: %s\n", val, str_val.c_str(), json_number.generate().c_str());
+}
 
 TEST_F(WeJson_Test, NUMBER_TEST)
 {
@@ -29,9 +56,28 @@ TEST_F(WeJson_Test, NUMBER_TEST)
     JsonNumber json_number_test_2(12);
     JsonNumber json_number_test_3(json_number_test_1);
     JsonNumber json_number_test_4(json_number_test_2);
-    ostringstream test_stream;
-    test_stream << json_number_test_1 << endl <<  json_number_test_2 << endl << json_number_test_3 << endl << json_number_test_4;
-    cout << test_stream.str() << std::endl;
+
+    ASSERT_EQ(test_number(-10000.001, "-10000.001"), true);
+    ASSERT_EQ(test_number(-10000, "-10000"), true);
+    ASSERT_EQ(test_number(-10000.0000, "-10000"), true);
+    ASSERT_EQ(test_number(10000.0000, "10000"), true);
+    ASSERT_EQ(test_number(10000.0000, "10000"), true);
+    ASSERT_EQ(test_number(10000.00001, "10000.00001"), true);
+    ASSERT_EQ(test_number(0.00001, "0.00001"), true);
+    ASSERT_EQ(test_number(0, "0"), true);
+    
+    ASSERT_EQ(test_parse_number(-10000.001, "-10000.001"), true);
+    ASSERT_EQ(test_parse_number(-10000, "-10000"), true);
+    ASSERT_EQ(test_parse_number(-10000.0000, "-10000"), true);
+    ASSERT_EQ(test_parse_number(10000.0000, "10000"), true);
+    ASSERT_EQ(test_parse_number(10000.0000, "10000"), true);
+    ASSERT_EQ(test_parse_number(10000.00001, "10000.00001"), true);
+    ASSERT_EQ(test_parse_number(10000.0000, "+10000"), true);
+    ASSERT_EQ(test_parse_number(10000.00001, "+10000.00001"), true);
+    ASSERT_EQ(test_parse_number(0.00001, "0.00001"), true);
+    ASSERT_EQ(test_parse_number(0.00001, "+0.00001"), true);
+    ASSERT_EQ(test_parse_number(-0.00001, "-0.00001"), true);
+    ASSERT_EQ(test_parse_number(0, "03"), true);
 }
 
 TEST_F(WeJson_Test, TYPE_TEST)
