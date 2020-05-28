@@ -50,11 +50,11 @@ JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos, int range)
 {
     ostringstream ostr;
     ostr << "json text arround error: " << endl;
-    auto pos = value_curr_pos;
     auto lower_limit = value_curr_pos - range > value_curr_pos.begin() ? value_curr_pos - range : value_curr_pos.begin();
-    auto upper_limit = value_curr_pos + range > value_curr_pos.end() ? value_curr_pos.end() -1 : value_curr_pos + range;
+    auto upper_limit = value_curr_pos + range >= value_curr_pos.end() ? value_curr_pos.end()-1 : value_curr_pos + range;
 
-    for (auto pos = lower_limit; pos <= upper_limit; ++pos) {
+    auto pos = lower_limit;
+    for (; pos <= upper_limit; ++pos) {
         ostr << *pos;
     }
 
@@ -69,7 +69,7 @@ JsonType::get_json_text(ByteBuffer_Iterator &value_curr_pos, int range)
 string
 JsonType::debug_info(ByteBuffer_Iterator &value_curr_pos)
 {
-    return get_json_text(value_curr_pos, 30); //先定60个字符的范围 
+    return this->get_json_text(value_curr_pos, 30); //先定60个字符的范围 
 }
 
 ///////////////////////////////////////////////////////////

@@ -17,9 +17,9 @@ enum InfoLevel {
 
 struct MsgContent {
     InfoLevel info_level;
+    int which_line;
     string when;
     string which_file;
-    string which_line;
     string msg_info;
 };
 

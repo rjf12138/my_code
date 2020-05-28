@@ -163,8 +163,8 @@ public:
     // 前置--
     ByteBuffer_Iterator& operator--()
     {
-        if (curr_pos_ == buff_->start_read_pos_ || curr_pos_ == buff_->start_write_pos_) {
-            curr_pos_ = buff_->start_write_pos_;
+        if (curr_pos_ == buff_->start_read_pos_) {
+            curr_pos_ = buff_->start_write_pos_; // 起始位置都是不可再减少的位置
             return *this;
         }
 
@@ -175,7 +175,7 @@ public:
     // 后置--
     ByteBuffer_Iterator& operator--(int)
     {
-        if (curr_pos_ == buff_->start_read_pos_ || curr_pos_ == buff_->start_write_pos_) {
+        if (curr_pos_ == buff_->start_read_pos_) {
             curr_pos_ = buff_->start_write_pos_;
             return *this;
         }
@@ -190,6 +190,9 @@ public:
         ByteBuffer_Iterator tmp_iter = *this;
         for (int i = 0; i < inc; ++i) {
             ++tmp_iter;
+            if (tmp_iter.curr_pos_ == tmp_iter.buff_->start_write_pos_) {
+                break;
+            }
         }
 
         return tmp_iter;
@@ -199,6 +202,9 @@ public:
         ByteBuffer_Iterator tmp_iter = *this;
         for (int i = 0; i < inc; ++i) {
             --tmp_iter;
+            if (tmp_iter.curr_pos_ == tmp_iter.buff_->start_read_pos_) {
+                break;
+            }
         }
 
         return tmp_iter;

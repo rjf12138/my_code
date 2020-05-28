@@ -60,14 +60,12 @@ MsgRecord::print_msg(InfoLevel level, int line, string file_name, const char *fo
 string 
 MsgRecord::get_msg_attr(InfoLevel level, int line, string file_name, const char *format, ...)
 {
-       
-    uint32_t msg_len = strlen(format)+1;
-    char *msg_buff = new char[msg_len];
-    memset(msg_buff, 0, msg_len);
+    char *msg_buff = new char[1024];
+    memset(msg_buff, 0, 1024);
 
     va_list arg_ptr;
     va_start(arg_ptr,format);
-    vsprintf(msg_buff, format, arg_ptr);
+    vsnprintf(msg_buff, 1024,format, arg_ptr);
     va_end(arg_ptr);
 
     char strtime[65] = {0};
@@ -81,7 +79,10 @@ MsgRecord::get_msg_attr(InfoLevel level, int line, string file_name, const char 
     tmp_msg.which_line = line;
     tmp_msg.which_file = basename(file_name.c_str());
     msg_info_.push_back(tmp_msg);
+    std::cout << "----------get msg attr--------------" << std::endl;
     delete msg_buff;
+    msg_buff = nullptr;
+    
     // 组装缓存中的所有消息
     return this->assemble_msg();
 }
@@ -94,7 +95,7 @@ MsgRecord::assemble_msg(void)
         ostr << "[" << msg_info_[i].when << "]";
         ostr << "[" << msg_info_[i].which_line << "]";
         ostr << "[" << msg_info_[i].which_file << "] ";
-        ostr << "[" << level_convert(msg_info_[i].info_level) << "]";
+        ostr << "[" << level_convert(msg_info_[i].info_level) << "]  ";
         ostr << msg_info_[i].msg_info << std::endl;
     }
     
