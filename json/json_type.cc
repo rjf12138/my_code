@@ -82,7 +82,7 @@ JsonNumber::JsonNumber(void)
 JsonNumber::JsonNumber(double val)
 : value_type_(DOUBLE_TYPE), double_value_(val)
 {
-
+    std::cout << "constru: " << double_value_ << " param_val: " << val << std::endl;
 }
 JsonNumber::JsonNumber(int32_t val)
 : value_type_(INT32_TYPE), int_value_(val)
@@ -145,21 +145,24 @@ JsonNumber::parse(ByteBuffer_Iterator &value_start_pos, ByteBuffer_Iterator &jso
 string 
 JsonNumber::generate(string ctrl_ch) 
 {
+    ostringstream os;
     switch (value_type_)
     {
     case DOUBLE_TYPE:
     {
-        return to_string(double_value_);
+        std::cout << "double_value: " << double_value_ << std::endl;
+        os << double_value_;
+        std::cout << "double_str_value: " << os.str().c_str() << std::endl;
     } break;
     case INT32_TYPE:
     {
-        return to_string(int_value_);
+        os << int_value_;
     } break;
     default:
         break;
     }
 
-    return string("");
+    return os.str();
 }
 
 ostream& 

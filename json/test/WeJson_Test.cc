@@ -24,6 +24,8 @@ protected:
 
 bool test_number(double val, string str_val)
 {
+    std::cout << "test_number: " << val << std::endl;
+    fprintf(stdout, "double: %lf, str_double: %s\n", val, str_val.c_str());
     JsonNumber json_number(val);
     ostringstream ostr;
     ostr << json_number;
@@ -57,6 +59,11 @@ TEST_F(WeJson_Test, NUMBER_TEST)
     JsonNumber json_number_test_3(json_number_test_1);
     JsonNumber json_number_test_4(json_number_test_2);
 
+    ASSERT_EQ(json_number_test_1.generate(), "1.1214");
+    ASSERT_EQ(json_number_test_2.generate(), "12");
+    ASSERT_EQ(json_number_test_1.generate(), json_number_test_3.generate());
+    ASSERT_EQ(json_number_test_2.generate(), json_number_test_4.generate());
+
     ASSERT_EQ(test_number(-10000.001, "-10000.001"), true);
     ASSERT_EQ(test_number(-10000, "-10000"), true);
     ASSERT_EQ(test_number(-10000.0000, "-10000"), true);
@@ -77,7 +84,13 @@ TEST_F(WeJson_Test, NUMBER_TEST)
     ASSERT_EQ(test_parse_number(0.00001, "0.00001"), true);
     ASSERT_EQ(test_parse_number(0.00001, "+0.00001"), true);
     ASSERT_EQ(test_parse_number(-0.00001, "-0.00001"), true);
-    ASSERT_EQ(test_parse_number(0, "03"), true);
+    try {
+        ASSERT_EQ(test_parse_number(0, "03"), true);
+    }catch (exception &e) {
+        std::cout << "=======================================" << std::endl;
+        std::cout << e.what() << std::endl;
+        std::cout << "=======================================" << std::endl;
+    }
 }
 
 TEST_F(WeJson_Test, TYPE_TEST)
