@@ -18,8 +18,10 @@
 #include <utility>
 
 using namespace std;
-////////////// linux system header file ////////////////
 
+
+#ifdef __gnu_linux__ 
+////////////// linux system header file ////////////////
 #include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -31,6 +33,7 @@ using namespace std;
 #include <sys/socket.h>
 #include <sys/wait.h>
 
+#endif
 ////////////// defined by myself ////////////////////////
 
 #endif
